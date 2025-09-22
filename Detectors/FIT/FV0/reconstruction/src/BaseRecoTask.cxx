@@ -59,12 +59,12 @@ RP BaseRecoTask::process(o2::fv0::Digit const& bcd,
     if (currentOutCh.charge > FV0DigParam::Instance().chargeThrForMeanTime) {
       sideAtimeFirst = std::min(static_cast<Double_t>(sideAtimeFirst), currentOutCh.time);
       if (inChData[ich].areAllFlagsGood()) {
-        if (std::abs(currentOutCh.time) < FV0DigParam::Instance().mTimeThresholdForReco) {
-          sideAtimeAvg += currentOutCh.time;
+        if (std::abs(outChData[ich].time) < FV0DigParam::Instance().mTimeThresholdForReco) {
+          sideAtimeAvg += outChData[ich].time;
           ndigitsA++;
         }
-        if (currentOutCh.charge > FV0DigParam::Instance().mAmpThresholdForReco && std::abs(currentOutCh.time) < FV0DigParam::Instance().mTimeThresholdForReco) {
-          sideAtimeAvgSelected += currentOutCh.time;
+        if (outChData[ich].charge > FV0DigParam::Instance().mAmpThresholdForReco && std::abs(outChData[ich].time) < FV0DigParam::Instance().mTimeThresholdForReco) {
+          sideAtimeAvgSelected += outChData[ich].time;
           ndigitsASelected++;
         }
       }
