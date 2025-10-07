@@ -80,7 +80,7 @@ class FV0DPLDigitizerTask : public o2::base::BaseDPLDigitizer
     const bool withQED = context->isQEDProvided() && !mDisableQED; //TODO: QED implementation to be tested
 
     if (mUseDeadChannelMap && mUpdateDeadChannelMap) {
-      auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap>("fv0deadchannelmap");
+      auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("fv0deadchannelmap");
       mDigitizer.setDeadChannelMap(deadChannelMap);
     }
 
@@ -192,6 +192,7 @@ o2::framework::DataProcessorSpec getFV0DigitizerSpec(int channel, bool mctruth)
               {"disable-qed", o2::framework::VariantType::Bool, false, {"disable QED handling"}},
               {"disable-dead-channel-map", o2::framework::VariantType::Bool, false, {"Don't mask dead channels"}}};
     // Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}}}};
+  }
 }
 
 } // end namespace fv0
