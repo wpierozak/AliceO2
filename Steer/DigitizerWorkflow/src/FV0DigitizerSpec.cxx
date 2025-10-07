@@ -54,7 +54,7 @@ class FV0DPLDigitizerTask : public o2::base::BaseDPLDigitizer
     LOG(debug) << "FV0DPLDigitizerTask:init";
     mDigitizer.init();
     mDisableQED = ic.options().get<bool>("disable-qed"); //TODO: QED implementation to be tested
-    mUseDeadChannelMap = ic.options().get<bool>("disable-dead-channel-map");
+    mUseDeadChannelMap = !ic.options().get<bool>("disable-dead-channel-map");
     mUpdateDeadChannelMap = mUseDeadChannelMap;
   }
 
@@ -182,15 +182,15 @@ o2::framework::DataProcessorSpec getFV0DigitizerSpec(int channel, bool mctruth)
 
   return DataProcessorSpec{
     "FV0Digitizer",
-    Inputs{InputSpec{"collisioncontext", "SIM", "COLLISIONCONTEXT", static_cast<SubSpecificationType>(channel), Lifetime::Timeframe}},
+      Inputs{InputSpec{"collisioncontext", "SIM", "COLLISIONCONTEXT", static_cast<SubSpecificationType>(channel), Lifetime::Timeframe}},
 
-    outputs,
+      outputs,
 
-    AlgorithmSpec{adaptFromTask<FV0DPLDigitizerTask>()},
-    Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}},
-            {"disable-qed", o2::framework::VariantType::Bool, false, {"disable QED handling"}}},
-            {"disable-dead-channel-map", o2::framework::VariantType::Bool, true, {"Don't mask dead channels"}}};
-  //Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}}}};
+      AlgorithmSpec{adaptFromTask<FV0DPLDigitizerTask>()},
+      Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}},
+              {"disable-qed", o2::framework::VariantType::Bool, false, {"disable QED handling"}},
+              {"disable-dead-channel-map", o2::framework::VariantType::Bool, false, {"Don't mask dead channels"}}};
+    // Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}}}};
 }
 
 } // end namespace fv0
