@@ -184,15 +184,14 @@ o2::framework::DataProcessorSpec getFV0DigitizerSpec(int channel, bool mctruth)
   return DataProcessorSpec{
     "FV0Digitizer",
       Inputs{InputSpec{"collisioncontext", "SIM", "COLLISIONCONTEXT", static_cast<SubSpecificationType>(channel), Lifetime::Timeframe}},
-
+      inputs,
       outputs,
 
       AlgorithmSpec{adaptFromTask<FV0DPLDigitizerTask>()},
       Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}},
               {"disable-qed", o2::framework::VariantType::Bool, false, {"disable QED handling"}},
-              {"disable-dead-channel-map", o2::framework::VariantType::Bool, false, {"Don't mask dead channels"}}};
+              {"disable-dead-channel-map", o2::framework::VariantType::Bool, false, {"Don't mask dead channels"}}}};
     // Options{{"pileup", VariantType::Int, 1, {"whether to run in continuous time mode"}}}};
-  }
 }
 
 } // end namespace fv0
