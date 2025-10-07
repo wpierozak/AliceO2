@@ -31,6 +31,7 @@
 #include "SimulationDataFormat/MCCompLabel.h"
 #include "DetectorsBase/BaseDPLDigitizer.h"
 #include "DetectorsRaw/HBFUtils.h"
+#include "Framework/CCDBParamSpec.h"
 #include <TFile.h>
 
 using namespace o2::framework;
