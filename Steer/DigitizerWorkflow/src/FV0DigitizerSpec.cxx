@@ -81,7 +81,7 @@ class FV0DPLDigitizerTask : public o2::base::BaseDPLDigitizer
 
     if (mUseDeadChannelMap && mUpdateDeadChannelMap) {
       auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("fv0deadchannelmap");
-      mDigitizer.setDeadChannelMap(deadChannelMap);
+      mDigitizer.setDeadChannelMap(deadChannelMap.get());
     }
 
     mDigitizer.setTimeStamp(context->getGRP().getTimeStart());
