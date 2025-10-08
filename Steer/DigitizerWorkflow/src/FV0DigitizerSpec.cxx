@@ -180,10 +180,9 @@ o2::framework::DataProcessorSpec getFV0DigitizerSpec(int channel, bool mctruth)
 
   std::vector<InputSpec> inputs;
   inputs.emplace_back("fv0deadchannelmap", "FV0", "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
-
+  inputs.emplace_back("collisioncontext", "SIM", "COLLISIONCONTEXT", static_cast<SubSpecificationType>(channel), Lifetime::Timeframe);
   return DataProcessorSpec{
     "FV0Digitizer",
-      Inputs{InputSpec{"collisioncontext", "SIM", "COLLISIONCONTEXT", static_cast<SubSpecificationType>(channel), Lifetime::Timeframe}},
       inputs,
       outputs,
 
