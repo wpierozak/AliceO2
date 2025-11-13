@@ -45,8 +45,9 @@ RP BaseRecoTask::process(o2::fv0::Digit const& bcd,
   for (int ich = 0; ich < nch; ich++) {
     LOG(debug) << "  channel " << ich << " / " << nch;
     int offsetChannel = getOffset(int(inChData[ich].ChId));
-    if(!mDeadChannelMap && !mDeadChannelMap->isChannelAlive(ich)) {
-      outChData[ich] = o2::fv0::ChannelDataFloat{inChData[ich].ChId, 0.0, 0.0, 0};
+    if(mDeadChannelMap && !mDeadChannelMap->isChannelAlive(ich)) {
+      LOG(debug) << "Channel " << ich << " is dead - discarding data";
+      //outChData[ich] = o2::fv0::ChannelDataFloat{inChData[ich].ChId, 0.0, 0.0, 0};
       continue;
     }
     outChData[ich] = o2::fv0::ChannelDataFloat{inChData[ich].ChId,
