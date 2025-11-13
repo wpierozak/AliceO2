@@ -45,6 +45,10 @@ RP BaseRecoTask::process(o2::fv0::Digit const& bcd,
   for (int ich = 0; ich < nch; ich++) {
     LOG(debug) << "  channel " << ich << " / " << nch;
     int offsetChannel = getOffset(int(inChData[ich].ChId));
+    if(!mDeadChannelMap && !mDeadChannelMap->isChannelAlive(ich)) {
+      outChData[ich] = o2::fv0::ChannelDataFloat{inChData[ich].ChId, 0.0, 0.0, 0};
+      continue;
+    }
     outChData[ich] = o2::fv0::ChannelDataFloat{inChData[ich].ChId,
                                                (inChData[ich].CFDTime - offsetChannel) * DigitizationConstant::TIME_PER_TDCCHANNEL,
                                                (float)inChData[ich].QTCAmpl,

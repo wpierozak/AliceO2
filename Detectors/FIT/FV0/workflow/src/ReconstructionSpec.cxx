@@ -21,6 +21,7 @@
 #include "DataFormatsFV0/ChannelData.h"
 #include "DataFormatsFV0/MCLabel.h"
 #include "DataFormatsFV0/FV0ChannelTimeCalibrationObject.h"
+#include "DataFormatsFIT/DeadChannelMap.h"
 #include "Framework/CCDBParamSpec.h"
 
 using namespace o2::framework;
@@ -43,6 +44,7 @@ void ReconstructionDPL::run(ProcessingContext& pc)
   mRecPoints.clear();
   auto digits = pc.inputs().get<gsl::span<o2::fv0::Digit>>("digits");
   auto digch = pc.inputs().get<gsl::span<o2::fv0::ChannelData>>("digch");
+  auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
   // RS: if we need to process MC truth, uncomment lines below
   // std::unique_ptr<const o2::dataformats::MCTruthContainer<o2::fv0::MCLabel>> labels;
   // const o2::dataformats::MCTruthContainer<o2::fv0::MCLabel>* lblPtr = nullptr;
@@ -52,6 +54,9 @@ void ReconstructionDPL::run(ProcessingContext& pc)
   if (mUpdateCCDB) {
     auto caliboffsets = pc.inputs().get<o2::fv0::FV0ChannelTimeCalibrationObject*>("fv0offsets");
     mReco.SetChannelOffset(caliboffsets.get());
+  }
+  if (mUpdateDeadChannelMap) {
+    mReco.SetDeadChannelMap(deadChannelMap.get());
   }
 
   int nDig = digits.size();
@@ -80,6 +85,10 @@ void ReconstructionDPL::finaliseCCDB(ConcreteDataMatcher& matcher, void* obj)
     mUpdateCCDB = false;
     return;
   }
+  if (matcher == ConcreteDataMatcher(o2::header::gDataOriginFV0, "DeadChannelMap", 0)) {
+    mUpdateDeadChannelMap = false;
+    return;
+  }
 }
 
 void ReconstructionDPL::endOfStream(EndOfStreamContext& ec)
@@ -94,6 +103,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, const std::string ccdbpath)
   std::vector<OutputSpec> outputSpec;
   inputSpec.emplace_back("digits", o2::header::gDataOriginFV0, "DIGITSBC", 0, Lifetime::Timeframe);
   inputSpec.emplace_back("digch", o2::header::gDataOriginFV0, "DIGITSCH", 0, Lifetime::Timeframe);
+  inputSpec.emplace_back("fv0deadchannelmap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
   if (useMC) {
     LOG(info) << "Currently Reconstruction does not consume and provide MC truth";
     inputSpec.emplace_back("labels", o2::header::gDataOriginFV0, "DIGITSMCTR", 0, Lifetime::Timeframe);

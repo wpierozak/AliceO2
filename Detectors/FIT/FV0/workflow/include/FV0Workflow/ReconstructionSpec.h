@@ -44,6 +44,7 @@ class ReconstructionDPL : public Task
  private:
   bool mUseMC = false;
   bool mUpdateCCDB = true;
+  bool mUpdateDeadChannelMap = true;
   const std::string mCCDBpath = o2::base::NameConf::getCCDBServer();
   std::vector<o2::fv0::RecPoints> mRecPoints;
   std::vector<o2::fv0::ChannelDataFloat> mRecChData;

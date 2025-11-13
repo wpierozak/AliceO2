@@ -18,6 +18,7 @@
 #include "DataFormatsFV0/ChannelData.h"
 #include "DataFormatsFV0/RecPoints.h"
 #include "DataFormatsFV0/FV0ChannelTimeCalibrationObject.h"
+#include "DataFormatsFIT/DeadChannelMap.h"
 #include <gsl/span>
 
 namespace o2
@@ -36,11 +37,12 @@ class BaseRecoTask
                              gsl::span<o2::fv0::ChannelDataFloat> outChData);
   void FinishTask();
   void SetChannelOffset(o2::fv0::FV0ChannelTimeCalibrationObject const* caliboffsets) { mCalibOffset = caliboffsets; };
+  void SetDeadChannelMap(o2::fit::DeadChannelMap const* deadChannelMap) { mDeadChannelMap = deadChannelMap; }
   int getOffset(int channel);
 
  private:
   o2::fv0::FV0ChannelTimeCalibrationObject const* mCalibOffset = nullptr;
-
+  o2::fit::DeadChannelMap const* mDeadChannelMap = nullptr;
   ClassDefNV(BaseRecoTask, 3);
 };
 } // namespace fv0
