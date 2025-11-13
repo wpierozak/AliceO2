@@ -44,7 +44,6 @@ void ReconstructionDPL::run(ProcessingContext& pc)
   mRecPoints.clear();
   auto digits = pc.inputs().get<gsl::span<o2::fv0::Digit>>("digits");
   auto digch = pc.inputs().get<gsl::span<o2::fv0::ChannelData>>("digch");
-  auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
   // RS: if we need to process MC truth, uncomment lines below
   // std::unique_ptr<const o2::dataformats::MCTruthContainer<o2::fv0::MCLabel>> labels;
   // const o2::dataformats::MCTruthContainer<o2::fv0::MCLabel>* lblPtr = nullptr;
@@ -56,6 +55,7 @@ void ReconstructionDPL::run(ProcessingContext& pc)
     mReco.SetChannelOffset(caliboffsets.get());
   }
   if (mUpdateDeadChannelMap) {
+    auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
     mReco.SetDeadChannelMap(deadChannelMap.get());
   }
 
@@ -103,7 +103,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, const std::string ccdbpath)
   std::vector<OutputSpec> outputSpec;
   inputSpec.emplace_back("digits", o2::header::gDataOriginFV0, "DIGITSBC", 0, Lifetime::Timeframe);
   inputSpec.emplace_back("digch", o2::header::gDataOriginFV0, "DIGITSCH", 0, Lifetime::Timeframe);
-  inputSpec.emplace_back("fv0deadchannelmap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
+  inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
   if (useMC) {
     LOG(info) << "Currently Reconstruction does not consume and provide MC truth";
     inputSpec.emplace_back("labels", o2::header::gDataOriginFV0, "DIGITSMCTR", 0, Lifetime::Timeframe);
