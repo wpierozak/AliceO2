@@ -33,3 +33,10 @@ o2_add_library(FT0Calibration
         PUBLIC_LINK_LIBRARIES
         O2::FT0Calibration
         )
+      o2_add_executable(ft0-events-per-bc-processor
+        COMPONENT_NAME calibration
+        SOURCES workflow/FT0EventsPerBcProcessor-Workflow.cxx
+        PUBLIC_LINK_LIBRARIES
+        O2::FT0Calibration
+      )
+      
