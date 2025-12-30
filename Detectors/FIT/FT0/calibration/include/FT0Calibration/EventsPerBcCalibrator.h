@@ -3,10 +3,12 @@
 
 #include <bitset>
 #include <array>
+#include <TH1F.h>
 
 #include "CommonDataFormat/FlatHisto2D.h"
 #include "CommonConstants/LHCConstants.h"
 #include "DataFormatsFT0/SpectraInfoObject.h"
+#include "DataFormatsFT0/Digit.h"
 #include "DetectorsCalibration/TimeSlotCalibration.h"
 #include "DetectorsCalibration/TimeSlot.h"
 
