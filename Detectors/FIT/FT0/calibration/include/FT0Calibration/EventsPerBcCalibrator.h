@@ -9,7 +9,6 @@
 #include "DataFormatsFT0/SpectraInfoObject.h"
 #include "DetectorsCalibration/TimeSlotCalibration.h"
 #include "DetectorsCalibration/TimeSlot.h"
-#include "DataFormatsFT0/BcEvents.h"
 
 namespace o2::ft0
 {
@@ -34,22 +33,19 @@ namespace o2::ft0
         using TFType = o2::calibration::TFType;
 
         public:
-        EventsPerBcCalibrator()
-        {
-            setUpdateAtTheEndOfRunOnly();
-        }
+        EventsPerBcCalibrator() = default;
         
         bool hasEnoughData(const Slot& slot) const final { return true; }
         void initOutput() final;
         void finalizeSlot(Slot& slot) final;
         Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) final;
 
-        const TH1F* getTvxPerBc() { return mTvxPerBc.get(); }
-        const CcdbObjectInfo* getTvxPerBcCcdbInfo() { return mTvxPerBcInfo.get(); }
+        const std::vector<std::unique_ptr<TH1F>>& getTvxPerBc() { return mTvxPerBcs; }
+        std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
 
         private:
-        std::unique_ptr<TH1F> mTvxPerBc;
-        std::unique_ptr<CcdbObjectInfo> mTvxPerBcInfo;
+        std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
+        std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
     };
 }
 
