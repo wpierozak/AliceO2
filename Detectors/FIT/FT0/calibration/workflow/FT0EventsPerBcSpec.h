@@ -42,6 +42,9 @@ namespace o2::calibration
         void run(o2::framework::ProcessingContext& pc) final
         {
             auto digits = pc.inputs().get<gsl::span<o2::ft0::Digit>>("digits");
+            if(digits.size() == 0) {
+                return;
+            }
             mCalibrator->process(digits);
             if(mOneObjectPerRun == false) {
                 sendOutput(pc.outputs());
@@ -58,7 +61,6 @@ namespace o2::calibration
         void sendOutput(o2::framework::DataAllocator& output)
         {
             using o2::framework::Output;
-
             const auto& tvxHists = mCalibrator->getTvxPerBc();
             auto& infos = mCalibrator->getTvxPerBcCcdbInfo();
             for(int idx = 0; idx < tvxHists.size(); idx++){
@@ -68,8 +70,8 @@ namespace o2::calibration
                 auto image = o2::ccdb::CcdbApi::createObjectImage(payload.get(), info.get());
                 LOG(info) << "Sending object " << info->getPath() << "/" << info->getFileName() << " of size " << image->size()
                     << " bytes, valid for " << info->getStartValidityTimestamp() << " : " << info->getEndValidityTimestamp();
-                output.snapshot(Output{o2::header::gDataOriginFT0, "EventsPerBc", idx}, *image.get());
-                output.snapshot(Output{o2::header::gDataOriginFT0, "EventsPerBc", idx}, *info.get());
+                output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "EventsPerBc", idx}, *image.get());
+                output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, "EventsPerBc", idx}, *info.get());
             }
 
             if(tvxHists.size()) {

@@ -6,7 +6,8 @@ o2::framework::WorkflowSpec defineDataProcessing(o2::framework::ConfigContext co
     std::vector<InputSpec> inputs;
     inputs.emplace_back("digits", "FT0", "DIGITSBC");
     std::vector<OutputSpec> outputs;
-    outputs.emplace_back(ConcreteDataTypeMatcher{"FT0", "EventsPerBc"}, Lifetime::Sporadic);
+    outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, "EventsPerBc"}, Lifetime::Sporadic);
+    outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, "EventsPerBc"}, Lifetime::Sporadic);
     DataProcessorSpec dataProcessorSpec{
         "FT0EventsPerBcProcessor",
         inputs,

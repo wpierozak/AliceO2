@@ -41,10 +41,10 @@ namespace o2::ft0
         public:
         EventsPerBcCalibrator() = default;
         
-        bool hasEnoughData(const Slot& slot) const final { return true; }
-        void initOutput() final;
-        void finalizeSlot(Slot& slot) final;
-        Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) final;
+        bool hasEnoughData(const Slot& slot) const override;
+        void initOutput() override;
+        void finalizeSlot(Slot& slot) override;
+        Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) override;
 
         const std::vector<std::unique_ptr<TH1F>>& getTvxPerBc() { return mTvxPerBcs; }
         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
@@ -52,6 +52,7 @@ namespace o2::ft0
         private:
         std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
+        uint32_t mMinNumberOfEntries{1000};
 
         ClassDefOverride(EventsPerBcCalibrator, 1);
     };
