@@ -27,6 +27,8 @@ namespace o2::ft0
         size_t entries{0};
         long startTimeStamp{0};
         long stopTimeStamp{0};
+
+        ClassDefNV(EventsPerBc, 1);
     };
 
     class EventsPerBcCalibrator final : public o2::calibration::TimeSlotCalibration<o2::ft0::EventsPerBc>
@@ -48,6 +50,8 @@ namespace o2::ft0
         private:
         std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
+
+        ClassDefOverride(EventsPerBcCalibrator, 1);
     };
 }
 
