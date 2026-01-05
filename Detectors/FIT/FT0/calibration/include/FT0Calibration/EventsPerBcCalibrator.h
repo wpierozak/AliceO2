@@ -11,6 +11,8 @@
 #include "DataFormatsFT0/Digit.h"
 #include "DetectorsCalibration/TimeSlotCalibration.h"
 #include "DetectorsCalibration/TimeSlot.h"
+#include "TH1F.h"
+#include "Rtypes.h"
 
 namespace o2::ft0
 {

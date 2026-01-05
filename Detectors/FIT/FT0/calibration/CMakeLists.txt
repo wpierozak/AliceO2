@@ -23,6 +23,7 @@ o2_add_library(FT0Calibration
     O2::Steer
     O2::CCDB
     ROOT::Minuit
+    ROOT::Hist
   )
 
 o2_target_root_dictionary(FT0Calibration
