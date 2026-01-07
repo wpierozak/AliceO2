@@ -24,24 +24,45 @@ namespace o2::calibration
         
         void init(o2::framework::InitContext& ic) final
         {
-            mCalibrator = std::make_unique<o2::ft0::EventsPerBcCalibrator>();
             if(ic.options().hasOption("slot-len-sec")) {
                 mSlotLenSec = ic.options().get<uint32_t>("slot-len-sec");
             }
             if(ic.options().hasOption("one-object-per-run")) {
                 mOneObjectPerRun = ic.options().get<bool>("one-object-per-run");
             }
+            if(ic.options().hasOption("slot-len-tf")) {
+                mSlotLen = ic.options().get<o2::calibration::TFType>("slot-len-tf");
+            }
+            if(ic.options().hasOption("min-entries-number")) {
+                mMinNumberOfEntries = ic.options().get<uint32_t>("min-entries-number");
+            }
+            if(ic.options().hasOption("min-ampl-side-a")) {
+                mMinAmplitudeSideA = ic.options().get<int32_t>("min-ampl-side-a");
+            }
+            if(ic.options().hasOption("min-ampl-side-c")) {
+                mMinAmplitudeSideC = ic.options().get<int32_t>("min-ampl-side-c");
+            }
+
+            mCalibrator = std::make_unique<o2::ft0::EventsPerBcCalibrator>(mMinNumberOfEntries, mMinAmplitudeSideA, mMinAmplitudeSideC);
 
             if(mOneObjectPerRun) {
+                LOG(info) << "Only one object will be created at the end of run";
                 mCalibrator->setUpdateAtTheEndOfRunOnly();
-            } else {
+            } 
+            if (mOneObjectPerRun == false && mSlotLen == 0){
+                LOG(info) << "Defined slot interval to " << mSlotLenSec << " seconds";
                 mCalibrator->setSlotLengthInSeconds(mSlotLenSec);
+            } 
+            if (mOneObjectPerRun == false && mSlotLen != 0) {
+                LOG(info) << "Defined slot interval to " << mSlotLen << " TFS";
+                mCalibrator->setSlotLength(mSlotLen);
             }
         }
 
         void run(o2::framework::ProcessingContext& pc) final
         {
             auto digits = pc.inputs().get<gsl::span<o2::ft0::Digit>>("digits");
+            o2::base::TFIDInfoHelper::fillTFIDInfo(pc, mCalibrator->getCurrentTFInfo());
             if(digits.size() == 0) {
                 return;
             }
@@ -51,8 +72,9 @@ namespace o2::calibration
             }
         }
 
-        void endOfStream(o2::framework::EndOfStreamContext& ec) final 
+        void endOfStream(o2::framework::EndOfStreamContext& ec) final
         {
+            LOG(info) << "Received end-of-stream, checking for slot to finalize...";
             mCalibrator->checkSlotsToFinalize();
             sendOutput(ec.outputs());
             mCalibrator->initOutput();    
@@ -63,7 +85,7 @@ namespace o2::calibration
             using o2::framework::Output;
             const auto& tvxHists = mCalibrator->getTvxPerBc();
             auto& infos = mCalibrator->getTvxPerBcCcdbInfo();
-            for(int idx = 0; idx < tvxHists.size(); idx++){
+            for(unsigned int idx = 0; idx < tvxHists.size(); idx++){
                 auto& info =  infos[idx];
                 const auto& payload = tvxHists[idx];
 
@@ -83,6 +105,10 @@ namespace o2::calibration
         std::unique_ptr<o2::ft0::EventsPerBcCalibrator> mCalibrator;
         bool mOneObjectPerRun;
         uint32_t mSlotLenSec;
+        o2::calibration::TFType mSlotLen;
+        uint32_t mMinNumberOfEntries;
+        int32_t mMinAmplitudeSideA;
+        int32_t mMinAmplitudeSideC;
     };
 }
 #endif

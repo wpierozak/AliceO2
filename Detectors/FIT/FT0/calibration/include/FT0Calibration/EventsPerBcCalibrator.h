@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include <array>
+#include <limits>
 #include <TH1F.h>
 
 #include "CommonDataFormat/FlatHisto2D.h"
@@ -11,6 +12,7 @@
 #include "DataFormatsFT0/Digit.h"
 #include "DetectorsCalibration/TimeSlotCalibration.h"
 #include "DetectorsCalibration/TimeSlot.h"
+#include "CommonDataFormat/TFIDInfo.h"
 #include "TH1F.h"
 #include "Rtypes.h"
 
@@ -18,12 +20,15 @@ namespace o2::ft0
 {
     struct EventsPerBc
     {
-        EventsPerBc() = default;
+        EventsPerBc(int32_t minAmplitudeSideA, int32_t minAmplitudeSideC): mMinAmplitudeSideA(minAmplitudeSideA), mMinAmplitudeSideC(minAmplitudeSideC) {}
         
         size_t getEntries() const { return entries; }
         void print() const;
-        void fill(const gsl::span<const o2::ft0::Digit> data);
+        void fill(const o2::dataformats::TFIDInfo& ti, const gsl::span<const o2::ft0::Digit> data);
         void merge(const EventsPerBc* prev);
+
+        const int32_t mMinAmplitudeSideA;
+        const int32_t mMinAmplitudeSideC;
 
         std::array<double, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
         size_t entries{0};
@@ -39,7 +44,7 @@ namespace o2::ft0
         using TFType = o2::calibration::TFType;
 
         public:
-        EventsPerBcCalibrator() = default;
+        EventsPerBcCalibrator(uint32_t minNumberOfEntries, int32_t minAmplitudeSideA, int32_t minAmplitudeSideC);
         
         bool hasEnoughData(const Slot& slot) const override;
         void initOutput() override;
@@ -50,9 +55,12 @@ namespace o2::ft0
         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
 
         private:
+        const uint32_t mMinNumberOfEntries;
+        const int32_t mMinAmplitudeSideA;
+        const int32_t mMinAmplitudeSideC;
+
         std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
-        uint32_t mMinNumberOfEntries{1000};
 
         ClassDefOverride(EventsPerBcCalibrator, 1);
     };
