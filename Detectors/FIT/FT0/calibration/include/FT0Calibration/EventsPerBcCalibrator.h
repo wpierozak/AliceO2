@@ -20,22 +20,22 @@ namespace o2::ft0
 {
     struct EventsPerBc
     {
-        EventsPerBc(int32_t minAmplitudeSideA, int32_t minAmplitudeSideC): mMinAmplitudeSideA(minAmplitudeSideA), mMinAmplitudeSideC(minAmplitudeSideC) {}
-        
-        size_t getEntries() const { return entries; }
-        void print() const;
-        void fill(const o2::dataformats::TFIDInfo& ti, const gsl::span<const o2::ft0::Digit> data);
-        void merge(const EventsPerBc* prev);
+      EventsPerBc(int32_t minAmplitudeSideA, int32_t minAmplitudeSideC) : mMinAmplitudeSideA(minAmplitudeSideA), mMinAmplitudeSideC(minAmplitudeSideC) {}
 
-        const int32_t mMinAmplitudeSideA;
-        const int32_t mMinAmplitudeSideC;
+      size_t getEntries() const { return entries; }
+      void print() const;
+      void fill(const o2::dataformats::TFIDInfo& ti, const gsl::span<const o2::ft0::Digit> data);
+      void merge(const EventsPerBc* prev);
 
-        std::array<double, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
-        size_t entries{0};
-        long startTimeStamp{0};
-        long stopTimeStamp{0};
+      const int32_t mMinAmplitudeSideA;
+      const int32_t mMinAmplitudeSideC;
 
-        ClassDefNV(EventsPerBc, 1);
+      std::array<double, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
+      size_t entries{0};
+      long startTimeStamp{0};
+      long stopTimeStamp{0};
+
+      ClassDefNV(EventsPerBc, 1);
     };
 
     class EventsPerBcCalibrator final : public o2::calibration::TimeSlotCalibration<o2::ft0::EventsPerBc>
@@ -44,25 +44,25 @@ namespace o2::ft0
         using TFType = o2::calibration::TFType;
 
         public:
-        EventsPerBcCalibrator(uint32_t minNumberOfEntries, int32_t minAmplitudeSideA, int32_t minAmplitudeSideC);
-        
-        bool hasEnoughData(const Slot& slot) const override;
-        void initOutput() override;
-        void finalizeSlot(Slot& slot) override;
-        Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) override;
+         EventsPerBcCalibrator(uint32_t minNumberOfEntries, int32_t minAmplitudeSideA, int32_t minAmplitudeSideC);
 
-        const std::vector<std::unique_ptr<TH1F>>& getTvxPerBc() { return mTvxPerBcs; }
-        std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
+         bool hasEnoughData(const Slot& slot) const override;
+         void initOutput() override;
+         void finalizeSlot(Slot& slot) override;
+         Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) override;
+
+         const std::vector<std::unique_ptr<TH1F>>& getTvxPerBc() { return mTvxPerBcs; }
+         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
 
         private:
-        const uint32_t mMinNumberOfEntries;
-        const int32_t mMinAmplitudeSideA;
-        const int32_t mMinAmplitudeSideC;
+         const uint32_t mMinNumberOfEntries;
+         const int32_t mMinAmplitudeSideA;
+         const int32_t mMinAmplitudeSideC;
 
-        std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
-        std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
+         std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
+         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
 
-        ClassDefOverride(EventsPerBcCalibrator, 1);
+         ClassDefOverride(EventsPerBcCalibrator, 1);
     };
 }
 
