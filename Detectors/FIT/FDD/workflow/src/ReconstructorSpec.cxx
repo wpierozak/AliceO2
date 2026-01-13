@@ -58,15 +58,19 @@ void FDDReconstructorDPL::run(ProcessingContext& pc)
   pc.outputs().snapshot(Output{mOrigin, "RECCHDATA", 0}, mRecChData);
 }
 
-DataProcessorSpec getFDDReconstructorSpec(bool useMC)
+DataProcessorSpec getFDDReconstructorSpec(bool useMC, bool useDeadChannelMap)
 {
   std::vector<InputSpec> inputSpec;
   std::vector<OutputSpec> outputSpec;
   inputSpec.emplace_back("digitsBC", o2::header::gDataOriginFDD, "DIGITSBC", 0, Lifetime::Timeframe);
   inputSpec.emplace_back("digitsCh", o2::header::gDataOriginFDD, "DIGITSCH", 0, Lifetime::Timeframe);
+  
   if (useMC) {
     LOG(info) << "Currently FDDReconstructor does not consume and provide MC truth";
     // inputSpec.emplace_back("labels", o2::header::gDataOriginFDD, "DIGITSMCTR", 0, Lifetime::Timeframe);
+  }
+  if (useDeadChannelMap) {
+    inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFDD, "DeadChannelMap", 0, LifeTime::Condition, ccdbParamSpec("FDD/Calib/DeadChannelMap"));
   }
   outputSpec.emplace_back(o2::header::gDataOriginFDD, "RECPOINTS", 0, Lifetime::Timeframe);
   outputSpec.emplace_back(o2::header::gDataOriginFDD, "RECCHDATA", 0, Lifetime::Timeframe);
