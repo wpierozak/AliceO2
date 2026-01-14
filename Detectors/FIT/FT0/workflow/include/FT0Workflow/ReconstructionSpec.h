@@ -47,6 +47,7 @@ class ReconstructionDPL : public Task
   bool mUseTimeOffsetCalib = true;
   bool mUseSlewingCalib = true;
   bool mUseDeadChannelMap = true;
+  bool mUpdateDeadChannelMap = true;
   const std::string mCCDBpath = o2::base::NameConf::getCCDBServer();
   std::vector<o2::ft0::RecPoints> mRecPoints;
   std::vector<o2::ft0::ChannelDataFloat> mRecChData;

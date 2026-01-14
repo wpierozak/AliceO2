@@ -69,7 +69,6 @@ RP CollisionTimeRecoTask::processDigit(const o2::ft0::Digit& digit,
     }
     if(mDeadChannelMap && !mDeadChannelMap->isChannelAlive(channelData.ChId)) {
       LOG(debug) << "Channel " << channelData.ChId << " is dead - discarding data";
-      outChData.emplace_back(channelData.ChId, 0.0, 0.0, 0);
       continue;
     }
     const float timeInPS = getTimeInPS(channelData);

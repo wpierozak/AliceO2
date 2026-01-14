@@ -17,6 +17,7 @@
 #include <vector>
 #include "DataFormatsFDD/Digit.h"
 #include "DataFormatsFDD/RecPoint.h"
+#include "DataFormatsFIT/DeadChannelMap.h"
 namespace o2
 {
 namespace fdd
@@ -30,10 +31,12 @@ class Reconstructor
                gsl::span<const o2::fdd::ChannelData> inChData,
                std::vector<o2::fdd::RecPoint>& RecPoints,
                std::vector<o2::fdd::ChannelDataFloat>& outChData);
-
   void finish();
 
+  void setDeadChannelMap(const o2::fit::DeadChannelMap* deadChannelMap) {mDeadChannelMap = deadChannelMap;}
+
  private:
+  const o2::fit::DeadChannelMap* mDeadChannelMap;
   ClassDefNV(Reconstructor, 3);
 };
 } // namespace fdd

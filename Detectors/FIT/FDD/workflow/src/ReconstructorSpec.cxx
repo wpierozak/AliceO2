@@ -18,6 +18,7 @@
 #include "FDDWorkflow/ReconstructorSpec.h"
 #include "DataFormatsFDD/Digit.h"
 #include "DataFormatsFDD/MCLabel.h"
+#include "Framework/CCDBParamSpec.h"
 
 using namespace o2::framework;
 
@@ -28,6 +29,7 @@ namespace fdd
 
 void FDDReconstructorDPL::init(InitContext& ic)
 {
+
 }
 
 void FDDReconstructorDPL::run(ProcessingContext& pc)
@@ -43,6 +45,10 @@ void FDDReconstructorDPL::run(ProcessingContext& pc)
     // labels = pc.inputs().get<const o2::dataformats::MCTruthContainer<o2::fdd::MCLabel>*>("labels");
     // lblPtr = labels.get();
     LOG(info) << "Ignoring MC info";
+  }
+  if(mUseDeadChannelMap) {
+    auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
+    mReco.setDeadChannelMap(deadChannelMap.get());
   }
   int nDig = digitsBC.size();
   mRecPoints.reserve(nDig);
@@ -70,7 +76,8 @@ DataProcessorSpec getFDDReconstructorSpec(bool useMC, bool useDeadChannelMap)
     // inputSpec.emplace_back("labels", o2::header::gDataOriginFDD, "DIGITSMCTR", 0, Lifetime::Timeframe);
   }
   if (useDeadChannelMap) {
-    inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFDD, "DeadChannelMap", 0, LifeTime::Condition, ccdbParamSpec("FDD/Calib/DeadChannelMap"));
+    LOG(info) << "Dead channel map will be applied during reconstruction";
+    inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFDD, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FDD/Calib/DeadChannelMap"));
   }
   outputSpec.emplace_back(o2::header::gDataOriginFDD, "RECPOINTS", 0, Lifetime::Timeframe);
   outputSpec.emplace_back(o2::header::gDataOriginFDD, "RECCHDATA", 0, Lifetime::Timeframe);

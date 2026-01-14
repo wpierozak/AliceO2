@@ -54,7 +54,7 @@ void ReconstructionDPL::run(ProcessingContext& pc)
     auto caliboffsets = pc.inputs().get<o2::fv0::FV0ChannelTimeCalibrationObject*>("fv0offsets");
     mReco.SetChannelOffset(caliboffsets.get());
   }
-  if (mUpdateDeadChannelMap) {
+  if (mUseDeadChannelMap && mUpdateDeadChannelMap) {
     auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
     mReco.SetDeadChannelMap(deadChannelMap.get());
   }
@@ -87,7 +87,6 @@ void ReconstructionDPL::finaliseCCDB(ConcreteDataMatcher& matcher, void* obj)
   }
   if (matcher == ConcreteDataMatcher(o2::header::gDataOriginFV0, "DeadChannelMap", 0)) {
     mUpdateDeadChannelMap = false;
-    return;
   }
 }
 
@@ -97,16 +96,19 @@ void ReconstructionDPL::endOfStream(EndOfStreamContext& ec)
        mTimer.CpuTime(), mTimer.RealTime(), mTimer.Counter() - 1);
 }
 
-DataProcessorSpec getReconstructionSpec(bool useMC, const std::string ccdbpath)
+DataProcessorSpec getReconstructionSpec(bool useMC, bool useDeadChannelMap, const std::string ccdbpath)
 {
   std::vector<InputSpec> inputSpec;
   std::vector<OutputSpec> outputSpec;
   inputSpec.emplace_back("digits", o2::header::gDataOriginFV0, "DIGITSBC", 0, Lifetime::Timeframe);
   inputSpec.emplace_back("digch", o2::header::gDataOriginFV0, "DIGITSCH", 0, Lifetime::Timeframe);
-  inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
   if (useMC) {
     LOG(info) << "Currently Reconstruction does not consume and provide MC truth";
     inputSpec.emplace_back("labels", o2::header::gDataOriginFV0, "DIGITSMCTR", 0, Lifetime::Timeframe);
+  }
+  if(useDeadChannelMap) {
+    LOG(info) << "Dead channel map will be applied during reconstruction";
+    inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
   }
   inputSpec.emplace_back("fv0offsets", "FV0", "TimeOffset", 0,
                          Lifetime::Condition,
@@ -119,7 +121,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, const std::string ccdbpath)
     "fv0-reconstructor",
     inputSpec,
     outputSpec,
-    AlgorithmSpec{adaptFromTask<ReconstructionDPL>(useMC, ccdbpath)},
+    AlgorithmSpec{adaptFromTask<ReconstructionDPL>(useMC, useDeadChannelMap, ccdbpath)},
     Options{}};
 }
 

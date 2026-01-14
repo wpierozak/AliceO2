@@ -44,6 +44,7 @@ void ReconstructionDPL::init(InitContext& ic)
   LOG(info) << "FT0 param mMinRMS: " << CalibParam::Instance().mMinRMS;
   LOG(info) << "FT0 param mMaxSigma: " << CalibParam::Instance().mMaxSigma;
   LOG(info) << "FT0 param mMaxDiffMean: " << CalibParam::Instance().mMaxDiffMean;
+  LOG(info) << "FT0 dead channel map will be applied " << mUseDeadChannelMap;
 }
 
 void ReconstructionDPL::run(ProcessingContext& pc)
@@ -70,10 +71,11 @@ void ReconstructionDPL::run(ProcessingContext& pc)
   }
 
   if (mUseDeadChannelMap) {
+    LOG(debug) << "Applying dead channel map";
     auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
     mReco.SetDeadChannelMap(deadChannelMap.get());
   }
-
+  
   mRecPoints.reserve(digits.size());
   mRecChData.reserve(channels.size());
   mReco.processTF(digits, channels, mRecPoints, mRecChData);
@@ -94,6 +96,11 @@ void ReconstructionDPL::finaliseCCDB(ConcreteDataMatcher& matcher, void* obj)
   if (matcher == ConcreteDataMatcher("FT0", "SlewingCoef", 0)) {
     LOG(debug) << "New SlewingCoef is uploaded";
     mUseSlewingCalib = false; // upload only once, slewing should be stable during the run
+    return;
+  }
+  if (matcher == ConcreteDataMatcher("FT0", "DeadChannelMap", 0)) {
+    LOG(debug) << "New DeadChannelMap is uploaded";
+    mUpdateDeadChannelMap = false; 
     return;
   }
 }
@@ -128,6 +135,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, const std::string ccdbpath, 
   }
 
   if (useDeadChannelMap) {
+    LOG(info) << "Dead channel map will be applied during reconstruction";
     inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFT0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FT0/Calib/DeadChannelMap"));
   }
 
