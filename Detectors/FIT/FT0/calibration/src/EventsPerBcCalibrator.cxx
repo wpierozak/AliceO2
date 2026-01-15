@@ -60,7 +60,7 @@ namespace o2::ft0
         auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
         std::map<std::string, std::string> metaData;
         mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/TvxPerBc", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
-        LOG(info) << "Created object valid from " << mTvxPerBcInfos.back()->getStartValidityTimestamp() << " to " << TvxPerBcInfos.back()->getEndValidityTimestamp() << ""
+        LOG(info) << "Created object valid from " << mTvxPerBcInfos.back()->getStartValidityTimestamp() << " to " << mTvxPerBcInfos.back()->getEndValidityTimestamp();
     }
 
     EventsPerBcCalibrator::Slot& EventsPerBcCalibrator::emplaceNewSlot(bool front, TFType tstart, TFType tend)
