@@ -10,6 +10,7 @@
 #include "Framework/WorkflowSpec.h"
 #include "Framework/Task.h"
 #include "DetectorsCalibration/Utils.h"
+#include "DetectorsBase/GRPGeomHelper.h"
 
 #include "DataFormatsFT0/Digit.h"
 #include "FT0Calibration/EventsPerBcCalibrator.h"
@@ -20,10 +21,11 @@ namespace o2::calibration
     class FT0EventsPerBcProcessor final : public o2::framework::Task
     {
         public:
-        FT0EventsPerBcProcessor() = default;
+        FT0EventsPerBcProcessor(std::shared_ptr<o2::base::GRPGeomRequest> request): mCCDBRequest(request) {}
         
         void init(o2::framework::InitContext& ic) final
         {
+          o2::base::GRPGeomHelper::instance().setRequest(mCCDBRequest);
           if (ic.options().hasOption("slot-len-sec")) {
             mSlotLenSec = ic.options().get<uint32_t>("slot-len-sec");
           }
@@ -59,8 +61,14 @@ namespace o2::calibration
           }
         }
 
+        void finaliseCCDB(o2::framework::ConcreteDataMatcher& matcher, void* obj)
+        {
+          o2::base::GRPGeomHelper::instance().finaliseCCDB(matcher, obj);
+        }
+
         void run(o2::framework::ProcessingContext& pc) final
         {
+            o2::base::GRPGeomHelper::instance().checkUpdates(pc);
             auto digits = pc.inputs().get<gsl::span<o2::ft0::Digit>>("digits");
             o2::base::TFIDInfoHelper::fillTFIDInfo(pc, mCalibrator->getCurrentTFInfo());
             if(digits.size() == 0) {
@@ -102,6 +110,7 @@ namespace o2::calibration
         }
 
         private:
+        std::shared_ptr<o2::base::GRPGeomRequest> mCCDBRequest;
         std::unique_ptr<o2::ft0::EventsPerBcCalibrator> mCalibrator;
         bool mOneObjectPerRun;
         uint32_t mSlotLenSec;

@@ -5,6 +5,13 @@ o2::framework::WorkflowSpec defineDataProcessing(o2::framework::ConfigContext co
     using namespace o2::framework;
     using o2::calibration::FT0EventsPerBcProcessor;
     std::vector<InputSpec> inputs;
+    auto ccdbRequest = std::make_shared<o2::base::GRPGeomRequest>(true,                           // orbitResetTime
+                                                                false,                           // GRPECS=true
+                                                                false,                          // GRPLHCIF
+                                                                false,                          // GRPMagField
+                                                                false,                          // askMatLUT
+                                                                o2::base::GRPGeomRequest::None, // geometry
+                                                                inputs);
     inputs.emplace_back("digits", "FT0", "DIGITSBC");
     std::vector<OutputSpec> outputs;
     outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, "EventsPerBc"}, Lifetime::Sporadic);
@@ -13,7 +20,7 @@ o2::framework::WorkflowSpec defineDataProcessing(o2::framework::ConfigContext co
       "FT0EventsPerBcProcessor",
       inputs,
       outputs,
-      AlgorithmSpec(adaptFromTask<FT0EventsPerBcProcessor>()),
+      AlgorithmSpec(adaptFromTask<FT0EventsPerBcProcessor>(ccdbRequest)),
       Options{
         {"slot-len-sec", VariantType::UInt32, 3600u, {"Duration of each slot in seconds"}},
         {"slot-len-tf", VariantType::UInt32, 0u, {"Slot length in Time Frames (TFs)"}},

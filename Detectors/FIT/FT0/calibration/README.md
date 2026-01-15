@@ -2,7 +2,7 @@
 
 ## Events per BC Calibration
 ### Description
-Generates histograms of **TVX per Bunch Crossing (BC)**. Events can be filtered by applying amplitude thresholds to the **A-side** and **C-side**.
+Generates histograms of **Events per Bunch Crossing (BC)**. Events can be filtered by applying amplitude thresholds to the **A-side** and **C-side**.
 
 ### Command-Line Options
 | Option | Default | Description |

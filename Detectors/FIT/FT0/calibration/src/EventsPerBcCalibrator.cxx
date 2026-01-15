@@ -52,14 +52,14 @@ namespace o2::ft0
     {
         LOG(info) << "Finalizing slot from " << slot.getStartTimeMS() << " to " << slot.getEndTimeMS();
         o2::ft0::EventsPerBc* data = slot.getContainer();
-        mTvxPerBcs.emplace_back(std::make_unique<TH1F>("TvxPerBc", "FT0 TVX per BC", o2::constants::lhc::LHCMaxBunches, 0, o2::constants::lhc::LHCMaxBunches - 1));
+        mTvxPerBcs.emplace_back(std::make_unique<TH1F>("EventsPerBc", "FT0 Events per BC", o2::constants::lhc::LHCMaxBunches, 0, o2::constants::lhc::LHCMaxBunches - 1));
         for (int bin = 0; bin < o2::constants::lhc::LHCMaxBunches; bin++) {
             mTvxPerBcs.back()->Fill(bin, data->mTvx[bin]);
         }
         auto clName = o2::utils::MemFileHelper::getClassName(*mTvxPerBcs.back());
-        auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
+        auto flName = o2::ccdb::CcdbApi::generateFileName(clName) + ".root";
         std::map<std::string, std::string> metaData;
-        mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/TvxPerBc", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
+        mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/EventsPerBc", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
         LOG(info) << "Created object valid from " << mTvxPerBcInfos.back()->getStartValidityTimestamp() << " to " << mTvxPerBcInfos.back()->getEndValidityTimestamp();
     }
 
