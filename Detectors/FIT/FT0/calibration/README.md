@@ -19,6 +19,13 @@ Generates histograms of **Events per Bunch Crossing (BC)**. Events can be filter
 ## How to Run
 
 ### Simulation Data
+First, it is important to digitize data with a non-zero run number, orbit, and timestamp. To set these parameters, one can use the `--configKeyValues` option, as shown in the example below.
+```
+o2-sim-digitizer-workflow \
+--onlyDet FT0 \
+--configKeyValues="HBFUtils.nHBFPerTF=128;HBFUtils.orbitFirst=128;HBFUtils.orbitFirstSampled=256;HBFUtils.runNumber=560560;HBFUtils.timestamp=1768464099000"
+```
+
 To process simulation data, digits must first be converted to RAW format. The `o2-ft0-digi2raw` tool performs this conversion and generates the required configuration file.
 
 Once converted, you can run the calibration either as a single integrated workflow or by spawning as the sender and receiver components separately.

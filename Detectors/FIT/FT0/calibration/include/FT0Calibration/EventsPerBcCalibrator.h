@@ -30,7 +30,7 @@ namespace o2::ft0
       const int32_t mMinAmplitudeSideA;
       const int32_t mMinAmplitudeSideC;
 
-      std::array<double, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
+      std::array<float, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
       size_t entries{0};
       long startTimeStamp{0};
       long stopTimeStamp{0};

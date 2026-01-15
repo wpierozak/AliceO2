@@ -12,14 +12,14 @@ namespace o2::ft0
     {
         size_t oldEntries = entries;
         for(const auto& digit: data) {
-            double isVertex = digit.mTriggers.getVertex();
+            float isVertex = digit.mTriggers.getVertex();
             if (digit.mTriggers.getAmplA() < mMinAmplitudeSideA || digit.mTriggers.getAmplC() < mMinAmplitudeSideC) {
               continue;
             }
             mTvx[digit.mIntRecord.bc] += isVertex;
             entries += isVertex;
         }
-        LOG(debug) << "Container is filled with " << entries - oldEntries << " new VTX events";
+        LOG(debug) << "Container is filled with " << entries - oldEntries << " new events";
     }
 
     void EventsPerBc::merge(const EventsPerBc* prev)
