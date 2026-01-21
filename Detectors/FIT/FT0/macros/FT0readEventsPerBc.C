@@ -33,7 +33,7 @@ void FT0readEventsPerBc(std::string ccdbUrl, long timestamp)
   }
 
   hist = std::make_unique<TH1F>("eventsPerBcHist", "Events per BC", o2::constants::lhc::LHCMaxBunches, 0, o2::constants::lhc::LHCMaxBunches - 1);
-  for (int idx = 0; idx < LhcOrbits; idx++) {
+  for (int idx = 0; idx < o2::constants::lhc::LHCMaxBunches; idx++) {
     hist->Fill(idx, (*events)[idx]);
   }
   canvas = std::make_unique<TCanvas>();
