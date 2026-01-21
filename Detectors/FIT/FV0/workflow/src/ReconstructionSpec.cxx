@@ -62,14 +62,11 @@ void ReconstructionDPL::run(ProcessingContext& pc)
   int nDig = digits.size();
   LOG(debug) << " nDig " << nDig << " | ndigch " << digch.size();
   mRecPoints.reserve(nDig);
-  mRecChData.resize(digch.size());
   for (int id = 0; id < nDig; id++) {
     const auto& digit = digits[id];
     LOG(debug) << " ndig " << id << " bc " << digit.getBC() << " orbit " << digit.getOrbit();
     auto channels = digit.getBunchChannelData(digch);
-    gsl::span<o2::fv0::ChannelDataFloat> out_ch(mRecChData);
-    out_ch = out_ch.subspan(digit.ref.getFirstEntry(), digit.ref.getEntries());
-    mRecPoints.emplace_back(mReco.process(digit, channels, out_ch));
+    mRecPoints.emplace_back(mReco.process(digit, channels, mRecChData));
   }
 
   LOG(debug) << "FV0 reconstruction pushes " << mRecPoints.size() << " RecPoints";

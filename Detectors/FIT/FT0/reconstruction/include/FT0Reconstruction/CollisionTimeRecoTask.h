@@ -60,7 +60,7 @@ class CollisionTimeRecoTask
   };
   void SetDeadChannelMap(const o2::fit::DeadChannelMap * deadChannelMap) 
   {
-    LOG(debug) << "Updated dead channel map for CollisionTimeRecoTask"; 
+    LOG(info) << "Updated dead channel map for CollisionTimeRecoTask";
     mDeadChannelMap = deadChannelMap; 
   }
   float getTimeInPS(const o2::ft0::ChannelData& channelData);

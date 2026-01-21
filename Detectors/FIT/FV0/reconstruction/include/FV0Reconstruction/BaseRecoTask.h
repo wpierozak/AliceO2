@@ -34,7 +34,7 @@ class BaseRecoTask
   ~BaseRecoTask() = default;
   o2::fv0::RecPoints process(o2::fv0::Digit const& bcd,
                              gsl::span<const o2::fv0::ChannelData> inChData,
-                             gsl::span<o2::fv0::ChannelDataFloat> outChData);
+                             std::vector<o2::fv0::ChannelDataFloat>& outChData);
   void FinishTask();
   void SetChannelOffset(o2::fv0::FV0ChannelTimeCalibrationObject const* caliboffsets) { mCalibOffset = caliboffsets; };
   void SetDeadChannelMap(o2::fit::DeadChannelMap const* deadChannelMap) { mDeadChannelMap = deadChannelMap; }

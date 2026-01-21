@@ -46,7 +46,8 @@ void FDDReconstructorDPL::run(ProcessingContext& pc)
     // lblPtr = labels.get();
     LOG(info) << "Ignoring MC info";
   }
-  if(mUseDeadChannelMap) {
+  if (mUseDeadChannelMap && mUpdateDeadChannelMap) {
+    LOG(info) << "Populating reconsturctor object with Dead Channel Map object";
     auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
     mReco.setDeadChannelMap(deadChannelMap.get());
   }
@@ -62,6 +63,14 @@ void FDDReconstructorDPL::run(ProcessingContext& pc)
   LOG(debug) << "FDD reconstruction pushes " << mRecPoints.size() << " RecPoints";
   pc.outputs().snapshot(Output{mOrigin, "RECPOINTS", 0}, mRecPoints);
   pc.outputs().snapshot(Output{mOrigin, "RECCHDATA", 0}, mRecChData);
+}
+
+void FDDReconstructorDPL::finaliseCCDB(ConcreteDataMatcher& matcher, void* obj)
+{
+  if (matcher == ConcreteDataMatcher("FDD", "DeadChannelMap", 0)) {
+    mUpdateDeadChannelMap = false;
+    return;
+  }
 }
 
 DataProcessorSpec getFDDReconstructorSpec(bool useMC, bool useDeadChannelMap)

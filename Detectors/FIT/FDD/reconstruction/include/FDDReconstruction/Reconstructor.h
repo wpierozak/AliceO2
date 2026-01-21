@@ -33,10 +33,14 @@ class Reconstructor
                std::vector<o2::fdd::ChannelDataFloat>& outChData);
   void finish();
 
-  void setDeadChannelMap(const o2::fit::DeadChannelMap* deadChannelMap) {mDeadChannelMap = deadChannelMap;}
+  void setDeadChannelMap(o2::fit::DeadChannelMap const* deadChannelMap)
+  {
+    LOG(info) << "Updated dead channel map";
+    mDeadChannelMap = deadChannelMap;
+  }
 
  private:
-  const o2::fit::DeadChannelMap* mDeadChannelMap;
+  o2::fit::DeadChannelMap const* mDeadChannelMap = nullptr;
   ClassDefNV(Reconstructor, 3);
 };
 } // namespace fdd

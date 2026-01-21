@@ -70,12 +70,12 @@ void ReconstructionDPL::run(ProcessingContext& pc)
     mReco.SetSlewingCalibObject(slewingCalibObject.get());
   }
 
-  if (mUseDeadChannelMap) {
+  if (mUseDeadChannelMap && mUpdateDeadChannelMap) {
     LOG(debug) << "Applying dead channel map";
     auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
     mReco.SetDeadChannelMap(deadChannelMap.get());
   }
-  
+
   mRecPoints.reserve(digits.size());
   mRecChData.reserve(channels.size());
   mReco.processTF(digits, channels, mRecPoints, mRecChData);
