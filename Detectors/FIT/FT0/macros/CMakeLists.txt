@@ -12,3 +12,7 @@ o2_add_test_root_macro(FT0Misaligner.C
                        PUBLIC_LINK_LIBRARIES O2::CCDB
                        O2::FT0Simulation
                        LABELS ft0)
+                       
+o2_add_test_root_macro(FT0readEventsPerBc.C
+                       PUBLIC_LINK_LIBRARIES O2::CCDB
+                       LABELS ft0)

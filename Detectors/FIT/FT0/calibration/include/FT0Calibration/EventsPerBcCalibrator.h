@@ -30,7 +30,7 @@ namespace o2::ft0
       const int32_t mMinAmplitudeSideA;
       const int32_t mMinAmplitudeSideC;
 
-      std::array<float, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
+      std::array<double, o2::constants::lhc::LHCMaxBunches> mTvx{0.0};
       size_t entries{0};
       long startTimeStamp{0};
       long stopTimeStamp{0};
@@ -42,27 +42,28 @@ namespace o2::ft0
     {
         using Slot = o2::calibration::TimeSlot<o2::ft0::EventsPerBc>;
         using TFType = o2::calibration::TFType;
+        using EventsHistogram = std::array<double, o2::constants::lhc::LHCMaxBunches>;
 
-        public:
-         EventsPerBcCalibrator(uint32_t minNumberOfEntries, int32_t minAmplitudeSideA, int32_t minAmplitudeSideC);
+       public:
+        EventsPerBcCalibrator(uint32_t minNumberOfEntries, int32_t minAmplitudeSideA, int32_t minAmplitudeSideC);
 
-         bool hasEnoughData(const Slot& slot) const override;
-         void initOutput() override;
-         void finalizeSlot(Slot& slot) override;
-         Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) override;
+        bool hasEnoughData(const Slot& slot) const override;
+        void initOutput() override;
+        void finalizeSlot(Slot& slot) override;
+        Slot& emplaceNewSlot(bool front, TFType tstart, TFType tend) override;
 
-         const std::vector<std::unique_ptr<TH1F>>& getTvxPerBc() { return mTvxPerBcs; }
-         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
+        const std::vector<EventsHistogram>& getTvxPerBc() { return mTvxPerBcs; }
+        std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>>& getTvxPerBcCcdbInfo() { return mTvxPerBcInfos; }
 
-        private:
-         const uint32_t mMinNumberOfEntries;
-         const int32_t mMinAmplitudeSideA;
-         const int32_t mMinAmplitudeSideC;
+       private:
+        const uint32_t mMinNumberOfEntries;
+        const int32_t mMinAmplitudeSideA;
+        const int32_t mMinAmplitudeSideC;
 
-         std::vector<std::unique_ptr<TH1F>> mTvxPerBcs;
-         std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
+        std::vector<EventsHistogram> mTvxPerBcs;
+        std::vector<std::unique_ptr<o2::ccdb::CcdbObjectInfo>> mTvxPerBcInfos;
 
-         ClassDefOverride(EventsPerBcCalibrator, 1);
+        ClassDefOverride(EventsPerBcCalibrator, 1);
     };
 }
 

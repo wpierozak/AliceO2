@@ -97,7 +97,7 @@ namespace o2::calibration
               auto& info = infos[idx];
               const auto& payload = tvxHists[idx];
 
-              auto image = o2::ccdb::CcdbApi::createObjectImage(payload.get(), info.get());
+              auto image = o2::ccdb::CcdbApi::createObjectImage(&payload, info.get());
               LOG(info) << "Sending object " << info->getPath() << "/" << info->getFileName() << " of size " << image->size()
                         << " bytes, valid for " << info->getStartValidityTimestamp() << " : " << info->getEndValidityTimestamp();
               output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "EventsPerBc", idx}, *image.get());
