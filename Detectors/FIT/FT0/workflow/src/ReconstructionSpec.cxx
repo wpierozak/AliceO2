@@ -100,7 +100,7 @@ void ReconstructionDPL::finaliseCCDB(ConcreteDataMatcher& matcher, void* obj)
   }
   if (matcher == ConcreteDataMatcher("FT0", "DeadChannelMap", 0)) {
     LOG(debug) << "New DeadChannelMap is uploaded";
-    mUpdateDeadChannelMap = false; 
+    mUpdateDeadChannelMap = false;
     return;
   }
 }
@@ -117,7 +117,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, const std::string ccdbpath, 
   std::vector<OutputSpec> outputSpec;
   inputSpec.emplace_back("digits", o2::header::gDataOriginFT0, "DIGITSBC", 0, Lifetime::Timeframe);
   inputSpec.emplace_back("digch", o2::header::gDataOriginFT0, "DIGITSCH", 0, Lifetime::Timeframe);
-  
+
   if (useMC) {
     LOG(info) << "Currently Reconstruction does not consume and provide MC truth";
     inputSpec.emplace_back("labels", o2::header::gDataOriginFT0, "DIGITSMCTR", 0, Lifetime::Timeframe);

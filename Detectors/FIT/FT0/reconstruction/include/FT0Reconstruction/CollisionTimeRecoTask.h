@@ -58,10 +58,10 @@ class CollisionTimeRecoTask
     LOG(info) << "Init for slewing calib object";
     mCalibSlew = calibSlew->makeSlewingPlots();
   };
-  void SetDeadChannelMap(const o2::fit::DeadChannelMap * deadChannelMap) 
+  void SetDeadChannelMap(const o2::fit::DeadChannelMap* deadChannelMap)
   {
     LOG(info) << "Updated dead channel map for CollisionTimeRecoTask";
-    mDeadChannelMap = deadChannelMap; 
+    mDeadChannelMap = deadChannelMap;
   }
   float getTimeInPS(const o2::ft0::ChannelData& channelData);
 

@@ -42,8 +42,7 @@ void customize(std::vector<o2::framework::ConfigParamSpec>& workflowOptions)
     {"disable-time-offset-calib", o2::framework::VariantType::Bool, false, {"disable timeoffset calibration"}},
     {"disable-slewing-calib", o2::framework::VariantType::Bool, false, {"disable slewing calibration"}},
     {"configKeyValues", VariantType::String, "", {"Semicolon separated key=value strings"}},
-    {"disable-dead-channel-map", VariantType::Bool, false, {"disable dead channel map"}}
-  };
+    {"disable-dead-channel-map", VariantType::Bool, false, {"disable dead channel map"}}};
   o2::raw::HBFUtilsInitializer::addConfigOption(options);
   std::swap(workflowOptions, options);
 }
