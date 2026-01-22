@@ -67,7 +67,7 @@ RP CollisionTimeRecoTask::processDigit(const o2::ft0::Digit& digit,
       // Reference channels shouldn't participate in reco at all!
       continue;
     }
-    if(mDeadChannelMap && !mDeadChannelMap->isChannelAlive(channelData.ChId)) {
+    if (mDeadChannelMap && !mDeadChannelMap->isChannelAlive(channelData.ChId)) {
       LOG(debug) << "Channel " << channelData.ChId << " is dead - discarding data";
       continue;
     }

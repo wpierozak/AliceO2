@@ -103,7 +103,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, bool useDeadChannelMap, cons
     LOG(info) << "Currently Reconstruction does not consume and provide MC truth";
     inputSpec.emplace_back("labels", o2::header::gDataOriginFV0, "DIGITSMCTR", 0, Lifetime::Timeframe);
   }
-  if(useDeadChannelMap) {
+  if (useDeadChannelMap) {
     LOG(info) << "Dead channel map will be applied during reconstruction";
     inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
   }

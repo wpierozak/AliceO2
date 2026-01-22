@@ -29,7 +29,6 @@ namespace fdd
 
 void FDDReconstructorDPL::init(InitContext& ic)
 {
-
 }
 
 void FDDReconstructorDPL::run(ProcessingContext& pc)
@@ -79,7 +78,7 @@ DataProcessorSpec getFDDReconstructorSpec(bool useMC, bool useDeadChannelMap)
   std::vector<OutputSpec> outputSpec;
   inputSpec.emplace_back("digitsBC", o2::header::gDataOriginFDD, "DIGITSBC", 0, Lifetime::Timeframe);
   inputSpec.emplace_back("digitsCh", o2::header::gDataOriginFDD, "DIGITSCH", 0, Lifetime::Timeframe);
-  
+
   if (useMC) {
     LOG(info) << "Currently FDDReconstructor does not consume and provide MC truth";
     // inputSpec.emplace_back("labels", o2::header::gDataOriginFDD, "DIGITSMCTR", 0, Lifetime::Timeframe);
