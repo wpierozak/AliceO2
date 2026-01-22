@@ -15,109 +15,108 @@
 #include "DataFormatsFT0/Digit.h"
 #include "FT0Calibration/EventsPerBcCalibrator.h"
 
-
 namespace o2::calibration
 {
-    class FT0EventsPerBcProcessor final : public o2::framework::Task
-    {
-        public:
-        FT0EventsPerBcProcessor(std::shared_ptr<o2::base::GRPGeomRequest> request): mCCDBRequest(request) {}
-        
-        void init(o2::framework::InitContext& ic) final
-        {
-          o2::base::GRPGeomHelper::instance().setRequest(mCCDBRequest);
-          if (ic.options().hasOption("slot-len-sec")) {
-            mSlotLenSec = ic.options().get<uint32_t>("slot-len-sec");
-          }
-          if (ic.options().hasOption("one-object-per-run")) {
-            mOneObjectPerRun = ic.options().get<bool>("one-object-per-run");
-          }
-          if (ic.options().hasOption("slot-len-tf")) {
-            mSlotLen = ic.options().get<o2::calibration::TFType>("slot-len-tf");
-          }
-          if (ic.options().hasOption("min-entries-number")) {
-            mMinNumberOfEntries = ic.options().get<uint32_t>("min-entries-number");
-          }
-          if (ic.options().hasOption("min-ampl-side-a")) {
-            mMinAmplitudeSideA = ic.options().get<int32_t>("min-ampl-side-a");
-          }
-          if (ic.options().hasOption("min-ampl-side-c")) {
-            mMinAmplitudeSideC = ic.options().get<int32_t>("min-ampl-side-c");
-          }
+class FT0EventsPerBcProcessor final : public o2::framework::Task
+{
+ public:
+  FT0EventsPerBcProcessor(std::shared_ptr<o2::base::GRPGeomRequest> request) : mCCDBRequest(request) {}
 
-          mCalibrator = std::make_unique<o2::ft0::EventsPerBcCalibrator>(mMinNumberOfEntries, mMinAmplitudeSideA, mMinAmplitudeSideC);
+  void init(o2::framework::InitContext& ic) final
+  {
+    o2::base::GRPGeomHelper::instance().setRequest(mCCDBRequest);
+    if (ic.options().hasOption("slot-len-sec")) {
+      mSlotLenSec = ic.options().get<uint32_t>("slot-len-sec");
+    }
+    if (ic.options().hasOption("one-object-per-run")) {
+      mOneObjectPerRun = ic.options().get<bool>("one-object-per-run");
+    }
+    if (ic.options().hasOption("slot-len-tf")) {
+      mSlotLen = ic.options().get<o2::calibration::TFType>("slot-len-tf");
+    }
+    if (ic.options().hasOption("min-entries-number")) {
+      mMinNumberOfEntries = ic.options().get<uint32_t>("min-entries-number");
+    }
+    if (ic.options().hasOption("min-ampl-side-a")) {
+      mMinAmplitudeSideA = ic.options().get<int32_t>("min-ampl-side-a");
+    }
+    if (ic.options().hasOption("min-ampl-side-c")) {
+      mMinAmplitudeSideC = ic.options().get<int32_t>("min-ampl-side-c");
+    }
 
-          if (mOneObjectPerRun) {
-            LOG(info) << "Only one object will be created at the end of run";
-            mCalibrator->setUpdateAtTheEndOfRunOnly();
-          }
-          if (mOneObjectPerRun == false && mSlotLen == 0) {
-            LOG(info) << "Defined slot interval to " << mSlotLenSec << " seconds";
-            mCalibrator->setSlotLengthInSeconds(mSlotLenSec);
-          }
-          if (mOneObjectPerRun == false && mSlotLen != 0) {
-            LOG(info) << "Defined slot interval to " << mSlotLen << " TFS";
-            mCalibrator->setSlotLength(mSlotLen);
-          }
-        }
+    mCalibrator = std::make_unique<o2::ft0::EventsPerBcCalibrator>(mMinNumberOfEntries, mMinAmplitudeSideA, mMinAmplitudeSideC);
 
-        void finaliseCCDB(o2::framework::ConcreteDataMatcher& matcher, void* obj)
-        {
-          o2::base::GRPGeomHelper::instance().finaliseCCDB(matcher, obj);
-        }
+    if (mOneObjectPerRun) {
+      LOG(info) << "Only one object will be created at the end of run";
+      mCalibrator->setUpdateAtTheEndOfRunOnly();
+    }
+    if (mOneObjectPerRun == false && mSlotLen == 0) {
+      LOG(info) << "Defined slot interval to " << mSlotLenSec << " seconds";
+      mCalibrator->setSlotLengthInSeconds(mSlotLenSec);
+    }
+    if (mOneObjectPerRun == false && mSlotLen != 0) {
+      LOG(info) << "Defined slot interval to " << mSlotLen << " TFS";
+      mCalibrator->setSlotLength(mSlotLen);
+    }
+  }
 
-        void run(o2::framework::ProcessingContext& pc) final
-        {
-            o2::base::GRPGeomHelper::instance().checkUpdates(pc);
-            auto digits = pc.inputs().get<gsl::span<o2::ft0::Digit>>("digits");
-            o2::base::TFIDInfoHelper::fillTFIDInfo(pc, mCalibrator->getCurrentTFInfo());
-            if(digits.size() == 0) {
-                return;
-            }
-            mCalibrator->process(digits);
-            if(mOneObjectPerRun == false) {
-                sendOutput(pc.outputs());
-            }
-        }
+  void finaliseCCDB(o2::framework::ConcreteDataMatcher& matcher, void* obj)
+  {
+    o2::base::GRPGeomHelper::instance().finaliseCCDB(matcher, obj);
+  }
 
-        void endOfStream(o2::framework::EndOfStreamContext& ec) final
-        {
-          LOG(info) << "Received end-of-stream, checking for slot to finalize...";
-          mCalibrator->checkSlotsToFinalize();
-          sendOutput(ec.outputs());
-          mCalibrator->initOutput();
-        }
+  void run(o2::framework::ProcessingContext& pc) final
+  {
+    o2::base::GRPGeomHelper::instance().checkUpdates(pc);
+    auto digits = pc.inputs().get<gsl::span<o2::ft0::Digit>>("digits");
+    o2::base::TFIDInfoHelper::fillTFIDInfo(pc, mCalibrator->getCurrentTFInfo());
+    if (digits.size() == 0) {
+      return;
+    }
+    mCalibrator->process(digits);
+    if (mOneObjectPerRun == false) {
+      sendOutput(pc.outputs());
+    }
+  }
 
-        void sendOutput(o2::framework::DataAllocator& output)
-        {
-            using o2::framework::Output;
-            const auto& tvxHists = mCalibrator->getTvxPerBc();
-            auto& infos = mCalibrator->getTvxPerBcCcdbInfo();
-            for (unsigned int idx = 0; idx < tvxHists.size(); idx++) {
-              auto& info = infos[idx];
-              const auto& payload = tvxHists[idx];
+  void endOfStream(o2::framework::EndOfStreamContext& ec) final
+  {
+    LOG(info) << "Received end-of-stream, checking for slot to finalize...";
+    mCalibrator->checkSlotsToFinalize();
+    sendOutput(ec.outputs());
+    mCalibrator->initOutput();
+  }
 
-              auto image = o2::ccdb::CcdbApi::createObjectImage(&payload, info.get());
-              LOG(info) << "Sending object " << info->getPath() << "/" << info->getFileName() << " of size " << image->size()
-                        << " bytes, valid for " << info->getStartValidityTimestamp() << " : " << info->getEndValidityTimestamp();
-              output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "EventsPerBc", idx}, *image.get());
-              output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, "EventsPerBc", idx}, *info.get());
-            }
+  void sendOutput(o2::framework::DataAllocator& output)
+  {
+    using o2::framework::Output;
+    const auto& tvxHists = mCalibrator->getTvxPerBc();
+    auto& infos = mCalibrator->getTvxPerBcCcdbInfo();
+    for (unsigned int idx = 0; idx < tvxHists.size(); idx++) {
+      auto& info = infos[idx];
+      const auto& payload = tvxHists[idx];
 
-            if(tvxHists.size()) {
-                mCalibrator->initOutput();
-            }
-        }
+      auto image = o2::ccdb::CcdbApi::createObjectImage(&payload, info.get());
+      LOG(info) << "Sending object " << info->getPath() << "/" << info->getFileName() << " of size " << image->size()
+                << " bytes, valid for " << info->getStartValidityTimestamp() << " : " << info->getEndValidityTimestamp();
+      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "EventsPerBc", idx}, *image.get());
+      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, "EventsPerBc", idx}, *info.get());
+    }
 
-        private:
-        std::shared_ptr<o2::base::GRPGeomRequest> mCCDBRequest;
-        std::unique_ptr<o2::ft0::EventsPerBcCalibrator> mCalibrator;
-        bool mOneObjectPerRun;
-        uint32_t mSlotLenSec;
-        o2::calibration::TFType mSlotLen;
-        uint32_t mMinNumberOfEntries;
-        int32_t mMinAmplitudeSideA;
-        int32_t mMinAmplitudeSideC;
-    };
-}
+    if (tvxHists.size()) {
+      mCalibrator->initOutput();
+    }
+  }
+
+ private:
+  std::shared_ptr<o2::base::GRPGeomRequest> mCCDBRequest;
+  std::unique_ptr<o2::ft0::EventsPerBcCalibrator> mCalibrator;
+  bool mOneObjectPerRun;
+  uint32_t mSlotLenSec;
+  o2::calibration::TFType mSlotLen;
+  uint32_t mMinNumberOfEntries;
+  int32_t mMinAmplitudeSideA;
+  int32_t mMinAmplitudeSideC;
+};
+} // namespace o2::calibration
 #endif
