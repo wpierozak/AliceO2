@@ -95,7 +95,7 @@ DataProcessorSpec getFDDReconstructorSpec(bool useMC, bool useDeadChannelMap)
     "fdd-reconstructor",
     inputSpec,
     outputSpec,
-    AlgorithmSpec{adaptFromTask<FDDReconstructorDPL>(useMC)},
+    AlgorithmSpec{adaptFromTask<FDDReconstructorDPL>(useMC, useDeadChannelMap)},
     Options{}};
 }
 

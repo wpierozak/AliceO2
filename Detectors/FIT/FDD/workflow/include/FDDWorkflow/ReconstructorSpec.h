@@ -31,7 +31,7 @@ namespace fdd
 class FDDReconstructorDPL : public Task
 {
  public:
-  FDDReconstructorDPL(bool useMC) : mUseMC(useMC) {}
+  FDDReconstructorDPL(bool useMC, bool useDeadChannelMap) : mUseMC(useMC), mUseDeadChannelMap(useDeadChannelMap) {}
   ~FDDReconstructorDPL() override = default;
   void init(InitContext& ic) final;
   void run(ProcessingContext& pc) final;
