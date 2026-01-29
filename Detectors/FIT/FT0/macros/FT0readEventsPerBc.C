@@ -1,14 +1,13 @@
 #if !defined(__CLING__) || defined(__ROOTCLING__)
-
 #include <iostream>
 #include <array>
 #include "CCDB/CcdbApi.h"
 #include "TH1F.h"
-#endif
-
+#include "DataFormatsFT0/EventsPerBc.h"
 #include "Framework/Logger.h"
 #include "CommonConstants/LHCConstants.h"
-#include "DataFormatsFT0/EventsPerBc.h"
+#endif
+
 
 std::unique_ptr<TH1F> hist;
 std::unique_ptr<TCanvas> canvas;
