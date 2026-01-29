@@ -56,4 +56,4 @@ o2_add_executable(ft0-events-per-bc-processor
     O2::FT0Calibration
     O2::Framework
     O2::CCDB
-)     
+)

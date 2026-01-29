@@ -50,7 +50,7 @@ Receiver example:
 ```
 o2-dpl-raw-proxy --channel-config "name=readout-proxy,type=pull,method=bind,address=tcp://localhost:30453,rateLogging=1,transport=zeromq" --dataspec "A:FT0/DIGITSBC/0" \
 | o2-calibration-ft0-events-per-bc-processor --FT0EventsPerBcProcessor "--slot-len-sec=10 --min-ampl-side-a=0" \
-| o2-calibration-ccdb-populator-workflow --ccdb-path=http://localhost:8080/ 
+| o2-calibration-ccdb-populator-workflow --ccdb-path=http://localhost:8080/
 ```
 
 ### CTF Data
@@ -58,5 +58,5 @@ Example:
 ```
 o2-ctf-reader-workflow --ctf-input ctf.root --onlyDet FT0 \
 | o2-calibration-ft0-events-per-bc-processor --FT0EventsPerBcProcessor "--slot-len-sec=10" \
-| o2-calibration-ccdb-populator-workflow --ccdb-path=http://localhost:8080/ 
+| o2-calibration-ccdb-populator-workflow --ccdb-path=http://localhost:8080/
 ```
