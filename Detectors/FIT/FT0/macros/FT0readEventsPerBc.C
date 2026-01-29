@@ -8,7 +8,6 @@
 #include "CommonConstants/LHCConstants.h"
 #endif
 
-
 std::unique_ptr<TH1F> hist;
 std::unique_ptr<TCanvas> canvas;
 
