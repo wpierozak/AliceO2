@@ -8,8 +8,8 @@
 
 #include "Framework/Logger.h"
 #include "CommonConstants/LHCConstants.h"
+#include "DataFormatsFT0/EventsPerBc.h"
 
-using EventsArray = std::array<double, o2::constants::lhc::LHCMaxBunches>;
 std::unique_ptr<TH1F> hist;
 std::unique_ptr<TCanvas> canvas;
 
@@ -24,7 +24,7 @@ void FT0readEventsPerBc(std::string ccdbUrl, long timestamp)
     timestamp = o2::ccdb::getCurrentTimestamp();
   }
 
-  EventsArray* events = ccdbApi.retrieveFromTFileAny<EventsArray>(ccdbPath, metadata, timestamp);
+  EventsArray* events = ccdbApi.retrieveFromTFileAny<o2::ft0::EventsPerBc>(ccdbPath, metadata, timestamp);
 
   if (!events) {
     LOGP(fatal, "EventsPerBc object not found in {}/{} for timestamp {}.", ccdbUrl, ccdbPath, timestamp);
@@ -33,7 +33,7 @@ void FT0readEventsPerBc(std::string ccdbUrl, long timestamp)
 
   hist = std::make_unique<TH1F>("eventsPerBcHist", "Events per BC", o2::constants::lhc::LHCMaxBunches, 0, o2::constants::lhc::LHCMaxBunches - 1);
   for (int idx = 0; idx < o2::constants::lhc::LHCMaxBunches; idx++) {
-    hist->Fill(idx, (*events)[idx]);
+    hist->Fill(idx, events->histogram[idx]);
   }
   canvas = std::make_unique<TCanvas>();
   hist->Draw();

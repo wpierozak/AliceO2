@@ -52,7 +52,7 @@ void EventsPerBcCalibrator::finalizeSlot(EventsPerBcCalibrator::Slot& slot)
 {
   LOG(info) << "Finalizing slot from " << slot.getStartTimeMS() << " to " << slot.getEndTimeMS();
   o2::ft0::EventsPerBcContainer* data = slot.getContainer();
-  mTvxPerBcs.emplace_back(data->mTvx, mMinAmplitudeSideA, mMinAmplitudeSideC);
+  mTvxPerBcs.emplace_back(data->mTvx);
 
   auto clName = o2::utils::MemFileHelper::getClassName(mTvxPerBcs.back());
   auto flName = o2::ccdb::CcdbApi::generateFileName(clName);

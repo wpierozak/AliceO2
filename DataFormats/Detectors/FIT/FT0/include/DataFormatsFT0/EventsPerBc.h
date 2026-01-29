@@ -8,8 +8,6 @@ namespace o2::ft0
 {
 struct EventsPerBc {
   std::array<double, o2::constants::lhc::LHCMaxBunches> histogram;
-  int16_t amplThresSideA;
-  int16_t amplThresSideC;
   ClassDefNV(EventsPerBc, 1);
 };
 } // namespace o2::ft0
