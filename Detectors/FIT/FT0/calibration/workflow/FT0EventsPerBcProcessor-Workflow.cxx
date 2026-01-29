@@ -8,8 +8,8 @@ o2::framework::WorkflowSpec defineDataProcessing(o2::framework::ConfigContext co
   using o2::calibration::FT0EventsPerBcProcessor;
   std::vector<InputSpec> inputs;
   inputs.emplace_back("digits", "FT0", "DIGITSBC", Lifetime::Timeframe);
-  auto ccdbRequest = std::make_shared<o2::base::GRPGeomRequest>(true,  // orbitResetTime
-                                                                false, // GRPECS=true
+  auto ccdbRequest = std::make_shared<o2::base::GRPGeomRequest>(true,                           // orbitResetTime
+                                                                false,                          // GRPECS=true
                                                                 false,                          // GRPLHCIF
                                                                 false,                          // GRPMagField
                                                                 false,                          // askMatLUT
