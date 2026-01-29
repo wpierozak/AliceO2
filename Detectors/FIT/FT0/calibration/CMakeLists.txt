@@ -34,7 +34,7 @@ o2_target_root_dictionary(FT0Calibration
 
 o2_add_executable(ft0-time-offset-calib
   COMPONENT_NAME calibration
-  SOURCES 
+  SOURCES
     workflow/FT0TimeOffsetCalibration-Workflow.cxx
   PUBLIC_LINK_LIBRARIES
     O2::FT0Calibration O2::FITCalibration
@@ -42,7 +42,7 @@ o2_add_executable(ft0-time-offset-calib
 
 o2_add_executable(ft0-time-spectra-processor
   COMPONENT_NAME calibration
-  SOURCES 
+  SOURCES
     workflow/FT0TimeSpectraProcessor-Workflow.cxx
   PUBLIC_LINK_LIBRARIES
     O2::FT0Calibration
@@ -50,11 +50,10 @@ o2_add_executable(ft0-time-spectra-processor
 
 o2_add_executable(ft0-events-per-bc-processor
   COMPONENT_NAME calibration
-  SOURCES 
+  SOURCES
     workflow/FT0EventsPerBcProcessor-Workflow.cxx
   PUBLIC_LINK_LIBRARIES
     O2::FT0Calibration
     O2::Framework
     O2::CCDB
-)
-      
+)     
