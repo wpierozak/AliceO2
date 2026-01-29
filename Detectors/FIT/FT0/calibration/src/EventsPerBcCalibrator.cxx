@@ -3,12 +3,12 @@
 
 namespace o2::ft0
 {
-void EventsPerBc::print() const
+void EventsPerBcContainer::print() const
 {
   LOG(info) << entries << " entries";
 }
 
-void EventsPerBc::fill(const o2::dataformats::TFIDInfo& ti, const gsl::span<const o2::ft0::Digit> data)
+void EventsPerBcContainer::fill(const o2::dataformats::TFIDInfo& ti, const gsl::span<const o2::ft0::Digit> data)
 {
   size_t oldEntries = entries;
   for (const auto& digit : data) {
@@ -22,7 +22,7 @@ void EventsPerBc::fill(const o2::dataformats::TFIDInfo& ti, const gsl::span<cons
   LOG(debug) << "Container is filled with " << entries - oldEntries << " new events";
 }
 
-void EventsPerBc::merge(const EventsPerBc* prev)
+void EventsPerBcContainer::merge(const EventsPerBcContainer* prev)
 {
   for (int bc = 0; bc < o2::constants::lhc::LHCMaxBunches; bc++) {
     mTvx[bc] += prev->mTvx[bc];
@@ -51,14 +51,14 @@ bool EventsPerBcCalibrator::hasEnoughData(const EventsPerBcCalibrator::Slot& slo
 void EventsPerBcCalibrator::finalizeSlot(EventsPerBcCalibrator::Slot& slot)
 {
   LOG(info) << "Finalizing slot from " << slot.getStartTimeMS() << " to " << slot.getEndTimeMS();
-  o2::ft0::EventsPerBc* data = slot.getContainer();
-  mTvxPerBcs.emplace_back(std::move(data->mTvx));
+  o2::ft0::EventsPerBcContainer* data = slot.getContainer();
+  mTvxPerBcs.emplace_back(data->mTvx, mMinAmplitudeSideA, mMinAmplitudeSideC);
 
   auto clName = o2::utils::MemFileHelper::getClassName(mTvxPerBcs.back());
   auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
 
   std::map<std::string, std::string> metaData;
-  mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/EventsPerBc", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
+  mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/EventsPerBcContainer", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
   LOG(info) << "Created object valid from " << mTvxPerBcInfos.back()->getStartValidityTimestamp() << " to " << mTvxPerBcInfos.back()->getEndValidityTimestamp();
 }
 
@@ -66,7 +66,7 @@ EventsPerBcCalibrator::Slot& EventsPerBcCalibrator::emplaceNewSlot(bool front, T
 {
   auto& cont = getSlots();
   auto& slot = front ? cont.emplace_front(tstart, tend) : cont.emplace_back(tstart, tend);
-  slot.setContainer(std::make_unique<EventsPerBc>(mMinAmplitudeSideA, mMinAmplitudeSideC));
+  slot.setContainer(std::make_unique<EventsPerBcContainer>(mMinAmplitudeSideA, mMinAmplitudeSideC));
   return slot;
 }
 } // namespace o2::ft0

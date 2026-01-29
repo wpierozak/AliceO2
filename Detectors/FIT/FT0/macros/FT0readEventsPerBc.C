@@ -1,4 +1,3 @@
-
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 
 #include <iostream>
