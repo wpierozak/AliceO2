@@ -15,5 +15,7 @@ o2_add_test_root_macro(FT0Misaligner.C
                        LABELS ft0)
 
 o2_add_test_root_macro(FT0readEventsPerBc.C
-                       PUBLIC_LINK_LIBRARIES O2::CCDB
+                       PUBLIC_LINK_LIBRARIES
+                       O2::CCDB
+                       O2::DataFormatsFT0
                        LABELS ft0)

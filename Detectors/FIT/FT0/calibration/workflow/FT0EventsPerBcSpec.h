@@ -41,9 +41,6 @@ class FT0EventsPerBcProcessor final : public o2::framework::Task
     if (ic.options().hasOption("one-object-per-run")) {
       mOneObjectPerRun = ic.options().get<bool>("one-object-per-run");
     }
-    if (ic.options().hasOption("slot-len-tf")) {
-      mSlotLen = ic.options().get<o2::calibration::TFType>("slot-len-tf");
-    }
     if (ic.options().hasOption("min-entries-number")) {
       mMinNumberOfEntries = ic.options().get<uint32_t>("min-entries-number");
     }
@@ -60,13 +57,9 @@ class FT0EventsPerBcProcessor final : public o2::framework::Task
       LOG(info) << "Only one object will be created at the end of run";
       mCalibrator->setUpdateAtTheEndOfRunOnly();
     }
-    if (mOneObjectPerRun == false && mSlotLen == 0) {
+    if (mOneObjectPerRun == false) {
       LOG(info) << "Defined slot interval to " << mSlotLenSec << " seconds";
       mCalibrator->setSlotLengthInSeconds(mSlotLenSec);
-    }
-    if (mOneObjectPerRun == false && mSlotLen != 0) {
-      LOG(info) << "Defined slot interval to " << mSlotLen << " TFS";
-      mCalibrator->setSlotLength(mSlotLen);
     }
   }
 
@@ -123,7 +116,6 @@ class FT0EventsPerBcProcessor final : public o2::framework::Task
   std::unique_ptr<o2::ft0::EventsPerBcCalibrator> mCalibrator;
   bool mOneObjectPerRun;
   uint32_t mSlotLenSec;
-  o2::calibration::TFType mSlotLen;
   uint32_t mMinNumberOfEntries;
   int32_t mMinAmplitudeSideA;
   int32_t mMinAmplitudeSideC;

@@ -12,12 +12,14 @@
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <iostream>
 #include <array>
+#endif
+
 #include "CCDB/CcdbApi.h"
+#include "CCDB/CCDBTimeStampUtils.h"
 #include "TH1F.h"
 #include "DataFormatsFT0/EventsPerBc.h"
 #include "Framework/Logger.h"
 #include "CommonConstants/LHCConstants.h"
-#endif
 
 std::unique_ptr<TH1F> hist;
 std::unique_ptr<TCanvas> canvas;
@@ -33,7 +35,7 @@ void FT0readEventsPerBc(std::string ccdbUrl, long timestamp)
     timestamp = o2::ccdb::getCurrentTimestamp();
   }
 
-  EventsArray* events = ccdbApi.retrieveFromTFileAny<o2::ft0::EventsPerBc>(ccdbPath, metadata, timestamp);
+  std::unique_ptr<o2::ft0::EventsPerBc> events(ccdbApi.retrieveFromTFileAny<o2::ft0::EventsPerBc>(ccdbPath, metadata, timestamp));
 
   if (!events) {
     LOGP(fatal, "EventsPerBc object not found in {}/{} for timestamp {}.", ccdbUrl, ccdbPath, timestamp);

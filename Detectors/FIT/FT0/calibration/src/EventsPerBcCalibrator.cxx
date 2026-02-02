@@ -23,12 +23,10 @@ void EventsPerBcContainer::fill(const o2::dataformats::TFIDInfo& ti, const gsl::
 {
   size_t oldEntries = entries;
   for (const auto& digit : data) {
-    double isVertex = digit.mTriggers.getVertex();
-    if (digit.mTriggers.getAmplA() < mMinAmplitudeSideA || digit.mTriggers.getAmplC() < mMinAmplitudeSideC) {
-      continue;
+    if (digit.mTriggers.getVertex() && digit.mTriggers.getAmplA() >= mMinAmplitudeSideA &&  digit.mTriggers.getAmplC() >= mMinAmplitudeSideC) {
+      mTvx[digit.mIntRecord.bc]++;
+      entries++;
     }
-    mTvx[digit.mIntRecord.bc] += isVertex;
-    entries += isVertex;
   }
   LOG(debug) << "Container is filled with " << entries - oldEntries << " new events";
 }
@@ -69,7 +67,7 @@ void EventsPerBcCalibrator::finalizeSlot(EventsPerBcCalibrator::Slot& slot)
   auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
 
   std::map<std::string, std::string> metaData;
-  mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/EventsPerBcContainer", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
+  mTvxPerBcInfos.emplace_back(std::make_unique<o2::ccdb::CcdbObjectInfo>("FT0/Calib/EventsPerBc", clName, flName, metaData, slot.getStartTimeMS(), slot.getEndTimeMS()));
   LOG(info) << "Created object valid from " << mTvxPerBcInfos.back()->getStartValidityTimestamp() << " to " << mTvxPerBcInfos.back()->getEndValidityTimestamp();
 }
 

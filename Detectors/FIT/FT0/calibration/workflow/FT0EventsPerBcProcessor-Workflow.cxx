@@ -36,9 +36,8 @@ o2::framework::WorkflowSpec defineDataProcessing(o2::framework::ConfigContext co
     AlgorithmSpec(adaptFromTask<FT0EventsPerBcProcessor>(ccdbRequest)),
     Options{
       {"slot-len-sec", VariantType::UInt32, 3600u, {"Duration of each slot in seconds"}},
-      {"slot-len-tf", VariantType::UInt32, 0u, {"Slot length in Time Frames (TFs)"}},
       {"one-object-per-run", VariantType::Bool, false, {"If set, workflow creates only one calibration object per run"}},
-      {"min-entries-number", VariantType::UInt32, 0u, {"Minimum number of entries required for a slot to be valid"}},
+      {"min-entries-number", VariantType::UInt32, 5000, {"Minimum number of entries required for a slot to be valid"}},
       {"min-ampl-side-a", VariantType::Int, 0, {"Amplitude threshold for Side A events"}},
       {"min-ampl-side-c", VariantType::Int, 0, {"Amplitude threshold for Side C events"}}}};
 
