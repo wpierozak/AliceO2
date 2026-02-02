@@ -23,7 +23,7 @@ void EventsPerBcContainer::fill(const o2::dataformats::TFIDInfo& ti, const gsl::
 {
   size_t oldEntries = entries;
   for (const auto& digit : data) {
-    if (digit.mTriggers.getVertex() && digit.mTriggers.getAmplA() >= mMinAmplitudeSideA &&  digit.mTriggers.getAmplC() >= mMinAmplitudeSideC) {
+    if (digit.mTriggers.getVertex() && digit.mTriggers.getAmplA() >= mMinAmplitudeSideA && digit.mTriggers.getAmplC() >= mMinAmplitudeSideC) {
       mTvx[digit.mIntRecord.bc]++;
       entries++;
     }
