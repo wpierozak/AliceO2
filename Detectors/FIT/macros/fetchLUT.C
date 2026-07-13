@@ -29,7 +29,7 @@ R__LOAD_LIBRARY(libO2DataFormatsFIT)
 void saveToCSV(const std::vector<o2::fit::EntryFEE>& lut, string_view path);
 void saveToRoot(std::shared_ptr<std::vector<o2::fit::EntryFEE>> lut, string_view path);
 
-void fetchLUT(const std::string ccdbUrl="alice-ccdb.cern.ch", const std::string detector="FT0", long timestamp = -1, const std::string fileName = "o2_lut.root")
+void fetchLUT(const std::string ccdbUrl = "alice-ccdb.cern.ch", const std::string detector = "FT0", long timestamp = -1, const std::string fileName = "o2_lut.root")
 {
   o2::ccdb::CcdbApi ccdbApi;
   ccdbApi.init(ccdbUrl);
