@@ -52,8 +52,10 @@ void ReconstructionDPL::run(ProcessingContext& pc)
     LOG(info) << "Ignoring MC info";
   }
   if (mUpdateCCDB) {
-    auto caliboffsets = pc.inputs().get<o2::fv0::FV0ChannelTimeCalibrationObject*>("fv0offsets");
-    mReco.SetChannelOffset(caliboffsets.get());
+    if(mUseTimeOffsetCalib) {
+      auto caliboffsets = pc.inputs().get<o2::fv0::FV0ChannelTimeCalibrationObject*>("FV0TimeOffset");
+      mReco.SetChannelOffset(caliboffsets.get());
+    }
   }
   if (mUseDeadChannelMap && mUpdateDeadChannelMap) {
     auto deadChannelMap = pc.inputs().get<o2::fit::DeadChannelMap*>("deadChannelMap");
@@ -79,7 +81,7 @@ void ReconstructionDPL::run(ProcessingContext& pc)
 //_______________________________________
 void ReconstructionDPL::finaliseCCDB(ConcreteDataMatcher& matcher, void* obj)
 {
-  if (matcher == ConcreteDataMatcher("FT0", "TimeOffset", 0)) {
+  if (matcher == ConcreteDataMatcher(o2::header::gDataOriginFV0, "FV0TimeOffset", 0)) {
     mUpdateCCDB = false;
     return;
   }
@@ -94,7 +96,7 @@ void ReconstructionDPL::endOfStream(EndOfStreamContext& ec)
        mTimer.CpuTime(), mTimer.RealTime(), mTimer.Counter() - 1);
 }
 
-DataProcessorSpec getReconstructionSpec(bool useMC, bool useDeadChannelMap, const std::string ccdbpath)
+DataProcessorSpec getReconstructionSpec(bool useMC, bool useDeadChannelMap, bool useTimeOffsetCalib, const std::string ccdbpath)
 {
   std::vector<InputSpec> inputSpec;
   std::vector<OutputSpec> outputSpec;
@@ -108,9 +110,10 @@ DataProcessorSpec getReconstructionSpec(bool useMC, bool useDeadChannelMap, cons
     LOG(info) << "Dead channel map will be applied during reconstruction";
     inputSpec.emplace_back("deadChannelMap", o2::header::gDataOriginFV0, "DeadChannelMap", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/DeadChannelMap"));
   }
-  inputSpec.emplace_back("fv0offsets", "FV0", "TimeOffset", 0,
-                         Lifetime::Condition,
-                         ccdbParamSpec("FV0/Calib/ChannelTimeOffset"));
+  if (useTimeOffsetCalib) {
+    LOG(info) << "Time offset calibration will be applied during reconstruction";
+    inputSpec.emplace_back("channelTimeOffset", o2::header::gDataOriginFV0, "FV0TimeOffset", 0, Lifetime::Condition, ccdbParamSpec("FV0/Calib/ChannelTimeOffset"));
+  }
 
   outputSpec.emplace_back(o2::header::gDataOriginFV0, "RECPOINTS", 0, Lifetime::Timeframe);
   outputSpec.emplace_back(o2::header::gDataOriginFV0, "RECCHDATA", 0, Lifetime::Timeframe);
@@ -119,7 +122,7 @@ DataProcessorSpec getReconstructionSpec(bool useMC, bool useDeadChannelMap, cons
     "fv0-reconstructor",
     inputSpec,
     outputSpec,
-    AlgorithmSpec{adaptFromTask<ReconstructionDPL>(useMC, useDeadChannelMap, ccdbpath)},
+    AlgorithmSpec{adaptFromTask<ReconstructionDPL>(useMC, useDeadChannelMap, useTimeOffsetCalib, ccdbpath)},
     Options{}};
 }
 

@@ -22,13 +22,13 @@ namespace o2
 namespace fv0
 {
 
-framework::WorkflowSpec getRecoWorkflow(bool useMC, bool disableRootInp, bool disableRootOut, bool useDeadChannelMap)
+framework::WorkflowSpec getRecoWorkflow(bool useMC, bool disableRootInp, bool disableRootOut, bool useDeadChannelMap, bool useTimeOffsetCalib)
 {
   framework::WorkflowSpec specs;
   if (!disableRootInp) {
     specs.emplace_back(o2::fv0::getDigitReaderSpec(useMC));
   }
-  specs.emplace_back(o2::fv0::getReconstructionSpec(useMC, useDeadChannelMap));
+  specs.emplace_back(o2::fv0::getReconstructionSpec(useMC, useDeadChannelMap, useTimeOffsetCalib));
   if (!disableRootOut) {
     specs.emplace_back(o2::fv0::getRecPointWriterSpec(useMC));
   }

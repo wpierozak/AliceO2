@@ -40,7 +40,8 @@ void customize(std::vector<o2::framework::ConfigParamSpec>& workflowOptions)
     {"disable-root-input", o2::framework::VariantType::Bool, false, {"disable root-files input readers"}},
     {"disable-root-output", o2::framework::VariantType::Bool, false, {"disable root-files output writers"}},
     {"disable-dead-channel-map", o2::framework::VariantType::Bool, false, {"disable dead channel map"}},
-    {"configKeyValues", VariantType::String, "", {"Semicolon separated key=value strings"}}};
+    {"configKeyValues", VariantType::String, "", {"Semicolon separated key=value strings"}},
+    {"disable-time-offset-calib", VariantType::Bool, {"disable time offset calibration"}}};
   o2::raw::HBFUtilsInitializer::addConfigOption(options);
   std::swap(workflowOptions, options);
 }
@@ -61,9 +62,10 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
   auto disableRootInp = configcontext.options().get<bool>("disable-root-input");
   auto disableRootOut = configcontext.options().get<bool>("disable-root-output");
   bool useDeadChannelMap = !configcontext.options().get<bool>("disable-dead-channel-map");
+  bool useTimeOffsetCalib = !configcontext.options().get<bool>("disable-time-offset-calibration");
 
   LOG(info) << "WorkflowSpec getRecoWorkflow useMC " << useMC;
-  auto wf = o2::fv0::getRecoWorkflow(useMC, disableRootInp, disableRootOut, useDeadChannelMap);
+  auto wf = o2::fv0::getRecoWorkflow(useMC, disableRootInp, disableRootOut, useDeadChannelMap, useTimeOffsetCalib);
 
   // configure dpl timer to inject correct firstTForbit: start from the 1st orbit of TF containing 1st sampled orbit
   o2::raw::HBFUtilsInitializer hbfIni(configcontext, wf);
