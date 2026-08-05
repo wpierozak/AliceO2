@@ -18,33 +18,38 @@
 #include <limits>
 #include <type_traits>
 
-namespace o2::fit::detector_config {
-namespace helpers {
-template<typename T>
-constexpr auto DefaultValue = [] {
-    using ValueType = std::remove_all_extents_t<std::remove_cvref_t<T>>;
-    if constexpr (std::is_same_v<ValueType, bool>) {
-        return false;
-    } else {
-        return std::numeric_limits<ValueType>::max();
+namespace o2::fit {
+namespace config_helpers {
+struct DefaultValueType {
+    template<typename T>
+        requires std::is_arithmetic_v<T>
+    constexpr operator T() const noexcept
+    {
+        if constexpr (std::is_same_v<T, bool>) {
+            return false;
+        } else {
+            return std::numeric_limits<T>::max();
+        }
     }
-}();
+};
+
+inline constexpr DefaultValueType DefaultValue{};
 
 template<typename T, std::size_t N>
 constexpr void fillDefaultArray(T (&array)[N]) {
     for (auto& element : array) {
-        element = DefaultValue<T>;
+        element = DefaultValue;
     }
 }
 }
 
-struct Tcm {
-    float phaseDelayA{};
-    float phaseDelayC{};
+struct TcmConfig {
+    float phaseDelayA{config_helpers::DefaultValue};
+    float phaseDelayC{config_helpers::DefaultValue};
 };
 
 template<int NChannels>
-struct Channels {
+struct ChannelsConfig {
     float timeAligments[NChannels]{};
     uint16_t cfdThresholds[NChannels]{};
     int16_t cfdZeros[NChannels]{};
@@ -55,21 +60,21 @@ struct Channels {
     bool channelMaskData[NChannels]{};
     bool channelMaskTriggers[NChannels]{};
 
-    constexpr Channels() {
-        helpers::fillDefaultArray(timeAligments);
-        helpers::fillDefaultArray(cfdThresholds);
-        helpers::fillDefaultArray(cfdZeros);
-        helpers::fillDefaultArray(adcZeros);
-        helpers::fillDefaultArray(adcDelays);
-        helpers::fillDefaultArray(scalingFactorAdc0s);
-        helpers::fillDefaultArray(scalingFactorAdc1s);
-        helpers::fillDefaultArray(channelMaskData);
-        helpers::fillDefaultArray(channelMaskTriggers);
+    constexpr ChannelsConfig() {
+        config_helpers::fillDefaultArray(timeAligments);
+        config_helpers::fillDefaultArray(cfdThresholds);
+        config_helpers::fillDefaultArray(cfdZeros);
+        config_helpers::fillDefaultArray(adcZeros);
+        config_helpers::fillDefaultArray(adcDelays);
+        config_helpers::fillDefaultArray(scalingFactorAdc0s);
+        config_helpers::fillDefaultArray(scalingFactorAdc1s);
+        config_helpers::fillDefaultArray(channelMaskData);
+        config_helpers::fillDefaultArray(channelMaskTriggers);
     }
 
     template<typename T>
     [[nodiscard]] static constexpr bool isDefault(const T& value) {
-        return value == helpers::DefaultValue<T>;
+        return value == static_cast<T>(config_helpers::DefaultValue);
     }
 
     gsl::span<const float, NChannels> getTimeAligments() const { return timeAligments; }
@@ -83,8 +88,8 @@ struct Channels {
     gsl::span<const bool, NChannels> getChannelMaskData() const { return channelMaskData; }
 };
 
-struct Pm {
-    uint8_t orGate{};
+struct PmConfig {
+    uint8_t orGate{config_helpers::DefaultValue};
 };
 }
 #endif
