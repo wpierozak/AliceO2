@@ -20,10 +20,10 @@ struct TriggersConfig
 {
     float vertexTimeLowThreshold{o2::fit::config_helpers::DefaultValue};
     float vertexTimeHighThreshold{o2::fit::config_helpers::DefaultValue};
-    uint16_t nChannels{o2::fit::config_helpers::DefaultValue};
-    uint16_t innerRings{o2::fit::config_helpers::DefaultValue};
-    uint16_t charge{o2::fit::config_helpers::DefaultValue};
-    uint16_t outerRings{o2::fit::config_helpers::DefaultValue};
+    uint16_t semicentralA{o2::fit::config_helpers::DefaultValue};
+    uint16_t semicentralC{o2::fit::config_helpers::DefaultValue};
+    uint16_t centralA{o2::fit::config_helpers::DefaultValue};
+    uint16_t centralC{o2::fit::config_helpers::DefaultValue};
 };
 
 struct FddFeeConfiguration : o2::conf::ConfigurableParamHelper<FddFeeConfiguration> {

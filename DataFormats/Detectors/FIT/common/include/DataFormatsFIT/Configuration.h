@@ -59,8 +59,6 @@ struct ChannelsConfig {
     int16_t cfdZeros[NChannels]{};
     int16_t adcZeros[NChannels]{};
     uint16_t adcDelays[NChannels]{};
-    float scalingFactorAdc0s[NChannels]{};
-    float scalingFactorAdc1s[NChannels]{};
     bool channelMaskData[NChannels]{};
     bool channelMaskTriggers[NChannels]{};
 
@@ -70,8 +68,6 @@ struct ChannelsConfig {
         config_helpers::fillDefaultArray(cfdZeros);
         config_helpers::fillDefaultArray(adcZeros);
         config_helpers::fillDefaultArray(adcDelays);
-        config_helpers::fillDefaultArray(scalingFactorAdc0s);
-        config_helpers::fillDefaultArray(scalingFactorAdc1s);
         config_helpers::fillDefaultArray(channelMaskData);
         config_helpers::fillDefaultArray(channelMaskTriggers);
     }
@@ -86,8 +82,6 @@ struct ChannelsConfig {
     gsl::span<const int16_t, NChannels> getCfdZeros() const { return cfdZeros; }
     gsl::span<const int16_t, NChannels> getAdcZeros() const { return adcZeros; }
     gsl::span<const uint16_t, NChannels> getAdcDelays() const { return adcDelays; }
-    gsl::span<const float, NChannels> getScalingFactorAdc0s() const { return scalingFactorAdc0s; }
-    gsl::span<const float, NChannels> getScalingFactorAdc1s() const { return scalingFactorAdc1s; }
     gsl::span<const bool, NChannels> getChannelMaskTriggers() const { return channelMaskTriggers; }
     gsl::span<const bool, NChannels> getChannelMaskData() const { return channelMaskData; }
 };

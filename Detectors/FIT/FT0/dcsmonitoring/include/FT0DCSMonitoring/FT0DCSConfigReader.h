@@ -19,6 +19,7 @@
 
 #include "FITDCSMonitoring/FITDCSConfigReader.h"
 #include "Rtypes.h"
+#include "DataFormatsFT0/FeeConfiguration.h"
 
 namespace o2
 {
@@ -33,7 +34,8 @@ namespace ft0
 class FT0DCSConfigReader : public o2::fit::FITDCSConfigReader
 {
   // For FT0 specific processing of DCS configurations, override base class methods here.
-
+  public:
+  Ft0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
   ClassDefNV(FT0DCSConfigReader, 0);
 };
 
