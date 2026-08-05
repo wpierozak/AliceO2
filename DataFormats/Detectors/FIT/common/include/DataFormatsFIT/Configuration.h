@@ -9,6 +9,10 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+// \file FeeConfiguration.h
+/// \brief Utilities to describe FEE configuration
+/// \author wiktor.pierozak@cern.ch
+
 #ifndef O2_FIT_FEE_CONFIGURATION
 #define O2_FIT_FEE_CONFIGURATION
 

@@ -13,7 +13,7 @@
 #define O2_FT0_FEE_CONFIGURATION
 
 #include "CommonUtils/ConfigurableParamHelper.h"
-#include "DataFormatsFIT/FeeConfiguration.h"
+#include "DataFormatsFIT/Configuration.h"
 
 namespace o2::ft0 {
 struct TriggersConfig

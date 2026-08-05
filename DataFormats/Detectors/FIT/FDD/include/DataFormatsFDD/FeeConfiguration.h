@@ -13,7 +13,7 @@
 #define O2_FDD_FEE_CONFIGURATION
 
 #include "CommonUtils/ConfigurableParamHelper.h"
-#include "DataFormatsFIT/FeeConfiguration.h"
+#include "DataFormatsFIT/Configuration.h"
 
 namespace o2::fdd {
 struct TriggersConfig
