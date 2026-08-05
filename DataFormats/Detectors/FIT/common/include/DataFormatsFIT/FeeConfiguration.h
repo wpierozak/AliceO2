@@ -13,11 +13,31 @@
 #define O2_FIT_FEE_CONFIGURATION
 
 #include <gsl/span>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <type_traits>
-#include <algorithm>
 
 namespace o2::fit::detector_config {
+namespace helpers {
+template<typename T>
+constexpr auto DefaultValue = [] {
+    using ValueType = std::remove_all_extents_t<std::remove_cvref_t<T>>;
+    if constexpr (std::is_same_v<ValueType, bool>) {
+        return false;
+    } else {
+        return std::numeric_limits<ValueType>::max();
+    }
+}();
+
+template<typename T, std::size_t N>
+constexpr void fillDefaultArray(T (&array)[N]) {
+    for (auto& element : array) {
+        element = DefaultValue<T>;
+    }
+}
+}
+
 struct Tcm {
     float phaseDelayA{};
     float phaseDelayC{};
@@ -25,16 +45,6 @@ struct Tcm {
 
 template<int NChannels>
 struct Channels {
-    template<typename T>
-    static constexpr auto DefaultValue = [] {
-        using ValueType = std::remove_all_extents_t<std::remove_cvref_t<T>>;
-        if constexpr (std::is_same_v<ValueType, bool>) {
-            return false;
-        } else {
-            return std::numeric_limits<ValueType>::max();
-        }
-    }();
-
     float timeAligments[NChannels]{};
     uint16_t cfdThresholds[NChannels]{};
     int16_t cfdZeros[NChannels]{};
@@ -46,27 +56,20 @@ struct Channels {
     bool channelMaskTriggers[NChannels]{};
 
     constexpr Channels() {
-        fillDefault(timeAligments);
-        fillDefault(cfdThresholds);
-        fillDefault(cfdZeros);
-        fillDefault(adcZeros);
-        fillDefault(adcDelays);
-        fillDefault(scalingFactorAdc0s);
-        fillDefault(scalingFactorAdc1s);
-        fillDefault(channelMaskData);
-        fillDefault(channelMaskTriggers);
+        helpers::fillDefaultArray(timeAligments);
+        helpers::fillDefaultArray(cfdThresholds);
+        helpers::fillDefaultArray(cfdZeros);
+        helpers::fillDefaultArray(adcZeros);
+        helpers::fillDefaultArray(adcDelays);
+        helpers::fillDefaultArray(scalingFactorAdc0s);
+        helpers::fillDefaultArray(scalingFactorAdc1s);
+        helpers::fillDefaultArray(channelMaskData);
+        helpers::fillDefaultArray(channelMaskTriggers);
     }
 
     template<typename T>
     [[nodiscard]] static constexpr bool isDefault(const T& value) {
-        return value == DefaultValue<T>;
-    }
-
-    template<typename T, std::size_t N>
-    static constexpr void fillDefault(T (&array)[N]) {
-        for (auto& element : array) {
-            element = DefaultValue<T>;
-        }
+        return value == helpers::DefaultValue<T>;
     }
 
     gsl::span<const float, NChannels> getTimeAligments() const { return timeAligments; }
@@ -83,4 +86,5 @@ struct Channels {
 struct Pm {
     uint8_t orGate{};
 };
+}
 #endif
