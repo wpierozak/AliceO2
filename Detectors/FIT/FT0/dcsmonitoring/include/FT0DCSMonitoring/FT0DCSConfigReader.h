@@ -27,13 +27,8 @@ namespace ft0
 {
 
 /// DCS configuration reader for FT0
-///
-/// At the moment this class doesn't differ from the base class o2::fit::FITDCSConfigReader,
-/// which makes it obsolete. It exists only as an example for how to create detector specific
-/// DCS configuration readers later.
 class FT0DCSConfigReader : public o2::fit::FITDCSConfigReader
 {
-  // For FT0 specific processing of DCS configurations, override base class methods here.
   public:
   Ft0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
   ClassDefNV(FT0DCSConfigReader, 0);

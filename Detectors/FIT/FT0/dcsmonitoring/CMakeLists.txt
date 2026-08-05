@@ -10,7 +10,7 @@
 # or submit itself to any jurisdiction.
 
 o2_add_library(FT0DCSMonitoring
-               SOURCES src/FT0DCSDataProcessor.cxx
+               SOURCES src/FT0DCSDataProcessor.cxx src/FT0DcsConfigReader.cxx
                PUBLIC_LINK_LIBRARIES O2::FITDCSMonitoring)
 
 o2_target_root_dictionary(FT0DCSMonitoring

@@ -19,6 +19,7 @@ o2_add_library(DataFormatsFT0
           src/CTF.cxx
           src/LookUpTable.cxx
           src/SlewingCoef.cxx
+          src/FeeConfiguration.cxx
 
   PUBLIC_LINK_LIBRARIES O2::FT0Base
                         O2::DataFormatsFIT
@@ -48,4 +49,5 @@ o2_target_root_dictionary(DataFormatsFT0
           include/DataFormatsFT0/SpectraInfoObject.h
           include/DataFormatsFT0/SlewingCoef.h
           include/DataFormatsFT0/EventsPerBc.h
+          include/DataFormatsFT0/FeeConfiguration.h
 )
