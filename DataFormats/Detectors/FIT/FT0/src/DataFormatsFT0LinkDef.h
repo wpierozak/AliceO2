@@ -57,5 +57,5 @@
 #pragma link C++ class o2::ft0::SlewingCoef + ;
 
 #pragma link C++ class o2::ft0::EventsPerBc + ;
-
+#pragma link C++ class o2::ft0::Ft0FeeConfiguration + ;
 #endif

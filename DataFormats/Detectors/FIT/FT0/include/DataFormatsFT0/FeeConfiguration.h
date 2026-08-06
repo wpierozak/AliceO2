@@ -15,25 +15,25 @@
 #include "CommonUtils/ConfigurableParamHelper.h"
 #include "DataFormatsFIT/Configuration.h"
 
-namespace o2::ft0 {
-struct TriggersConfig
+namespace o2::ft0
 {
-    float vertexTimeLowThreshold{o2::fit::config_helpers::DefaultValue};
-    float vertexTimeHighThreshold{o2::fit::config_helpers::DefaultValue};
-    uint16_t semicentralA{o2::fit::config_helpers::DefaultValue};
-    uint16_t semicentralC{o2::fit::config_helpers::DefaultValue};
-    uint16_t centralA{o2::fit::config_helpers::DefaultValue};
-    uint16_t centralC{o2::fit::config_helpers::DefaultValue};
+struct TriggersConfig {
+  float vertexTimeLowThreshold{o2::fit::config_helpers::DefaultValue};
+  float vertexTimeHighThreshold{o2::fit::config_helpers::DefaultValue};
+  uint16_t semicentralA{o2::fit::config_helpers::DefaultValue};
+  uint16_t semicentralC{o2::fit::config_helpers::DefaultValue};
+  uint16_t centralA{o2::fit::config_helpers::DefaultValue};
+  uint16_t centralC{o2::fit::config_helpers::DefaultValue};
 };
 
-struct Ft0FeeConfiguration : o2::conf::ConfigurableParamHelper<Ft0FeeConfiguration> {
-    static constexpr int NChannels = 212;
-    TriggersConfig triggers;
-    o2::fit::ChannelsConfig<NChannels> channels;
-    o2::fit::TcmConfig tcm;
-    o2::fit::PmConfig pmA[10];
-    o2::fit::PmConfig pmC[10];
-    O2ParamDef(Ft0FeeConfiguration, "Ft0FeeConfiguration");
+struct Ft0FeeConfiguration {
+  static constexpr int NChannels = 212;
+  TriggersConfig triggers;
+  o2::fit::ChannelsConfig<NChannels> channels;
+  o2::fit::TcmConfig tcm;
+  o2::fit::PmConfig pmA[10];
+  o2::fit::PmConfig pmC[10];
+  ClassDefNV(Ft0FeeConfiguration, 1);
 };
-}
+} // namespace o2::ft0
 #endif

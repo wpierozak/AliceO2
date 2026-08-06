@@ -11,7 +11,7 @@
 
 o2_add_library(FT0DCSMonitoring
                SOURCES src/FT0DCSDataProcessor.cxx src/FT0DcsConfigReader.cxx
-               PUBLIC_LINK_LIBRARIES O2::FITDCSMonitoring)
+               PUBLIC_LINK_LIBRARIES O2::FITDCSMonitoring O2::DataFormatsFT0)
 
 o2_target_root_dictionary(FT0DCSMonitoring
                           HEADERS include/FT0DCSMonitoring/FT0DCSConfigReader.h)
