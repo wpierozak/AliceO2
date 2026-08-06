@@ -74,8 +74,6 @@ class FITDeadChannelMapReader
   bool mValidateUpload = true;                                            ///< Validate upload mode
 
   std::string mFilenameFeeConfig;
-
-  ClassDefNV(FITDeadChannelMapReader, 1);
 };
 
 } // namespace fit

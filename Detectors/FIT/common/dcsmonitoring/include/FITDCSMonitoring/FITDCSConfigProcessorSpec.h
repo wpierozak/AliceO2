@@ -30,8 +30,6 @@
 #include <string>
 #include <vector>
 
-using namespace o2::framework;
-
 namespace o2
 {
 namespace fit
@@ -98,8 +96,8 @@ class FITDCSConfigProcessor : public o2::framework::Task
     auto image = o2::ccdb::CcdbApi::createObjectImage(&object, &info);
     LOG(info) << "Sending object " << info.getPath() << "/" << info.getFileName() << " of size " << image->size()
               << " bytes, valid for " << info.getStartValidityTimestamp() << " : " << info.getEndValidityTimestamp();
-    output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, descriptor, 0}, *image.get());
-    output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, descriptor, 0}, info);
+    output.snapshot(o2::framework::Output{o2::calibration::Utils::gDataOriginCDBPayload, descriptor, 0}, *image.get());
+    output.snapshot(o2::framework::Output{o2::calibration::Utils::gDataOriginCDBWrapper, descriptor, 0}, info);
   }
 
   std::unique_ptr<FITDeadChannelMapReader> mDeadChannelMapReader;

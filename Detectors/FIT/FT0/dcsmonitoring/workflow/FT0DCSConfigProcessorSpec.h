@@ -14,10 +14,10 @@
 ///
 /// \author Andreas Molander <andreas.molander@cern.ch>, University of Jyvaskyla, Finland
 
-#ifndef O2_FT0_DCSCONFIGPROCESSOR_H
-#define O2_FT0_DCSCONFIGPROCESSOR_H
+#ifndef O2_FT0_DCSCONFIGPROCESSOR_SPEC_H
+#define O2_FT0_DCSCONFIGPROCESSOR_SPEC_H
 
-#include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
+#include "FT0DCSMonitoring/FT0DCSConfigProcessor.h"
 #include "DetectorsCalibration/Utils.h"
 #include "Framework/WorkflowSpec.h"
 #include "Headers/DataHeader.h"
@@ -25,48 +25,8 @@
 #include <string>
 #include <vector>
 
-namespace o2
+namespace o2::framework
 {
-namespace ft0
-{
-
-class FT0DCSConfigProcessor : public o2::fit::FITDCSConfigProcessor
-{
- public:
-  FT0DCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
-    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM) {}
-
-  void init(o2::framework::InitContext& ic) final
-  {
-    initDeadChannelMapReader();
-    setupDeadChannelMapReader(ic);
-  }
-
-  void run(o2::framework::ProcessingContext& pc) final
-  {
-    long dataTime = getValidityTime(pc);
-
-    gsl::span<const char> dataBuffer = pc.inputs().get<gsl::span<char>>("inputConfig");
-    std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
-    LOG(info) << "Got input file " << configFileName << " of size " << dataBuffer.size();
-
-    if (!configFileName.compare(mDeadChannelMapReader->getFileNameDChM())) {
-      handleDeadChannelMapUpdate(pc,dataTime, dataBuffer);
-    } else {
-      LOG(error) << "Unknown input file: " << configFileName;
-    }
-  }
-
-  void endOfStream(o2::framework::EndOfStreamContext& ec) final
-  {
-  }
-};
-
-} // namespace ft0
-
-namespace framework
-{
-
 DataProcessorSpec getFT0DCSConfigProcessorSpec()
 {
   o2::header::DataDescription ddDChM = "FT0_DCHM";
@@ -87,6 +47,5 @@ DataProcessorSpec getFT0DCSConfigProcessorSpec()
 }
 
 } // namespace framework
-} // namespace o2
 
-#endif // O2_FT0_DCSCONFIGPROCESSOR_H
+#endif // O2_FT0_DCSCONFIGPROCESSOR_SPEC_H

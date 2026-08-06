@@ -19,5 +19,4 @@ o2_add_library(FITDCSMonitoring
 
 # TODO AM: remove include/FITDCSMonitoring/FITDCSDataReader.h when dictionaries are created in DataFormatsFIT instead
 o2_target_root_dictionary(FITDCSMonitoring
-                          HEADERS include/FITDCSMonitoring/FITDCSConfigReader.h
-                                  include/FITDCSMonitoring/FITDCSDataReader.h)
+                          HEADERS include/FITDCSMonitoring/FITDCSDataReader.h)
