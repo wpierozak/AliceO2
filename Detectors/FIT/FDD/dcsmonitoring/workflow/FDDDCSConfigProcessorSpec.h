@@ -31,6 +31,38 @@ namespace o2
 namespace framework
 {
 
+class FDDDCSConfigProcessor : public o2::fit::FITDCSConfigProcessor
+{
+ public:
+  FDDDCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
+    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM) {}
+
+  void init(o2::framework::InitContext& ic) final
+  {
+    initDeadChannelMapReader();
+    setupDeadChannelMapReader(ic);
+  }
+
+  void run(o2::framework::ProcessingContext& pc) final
+  {
+    long dataTime = getValidityTime(pc);
+
+    gsl::span<const char> dataBuffer = pc.inputs().get<gsl::span<char>>("inputConfig");
+    std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
+    LOG(info) << "Got input file " << configFileName << " of size " << dataBuffer.size();
+
+    if (!configFileName.compare(mDeadChannelMapReader->getFileNameDChM())) {
+      handleDeadChannelMapUpdate(pc,dataTime, dataBuffer);
+    } else {
+      LOG(error) << "Unknown input file: " << configFileName;
+    }
+  }
+
+  void endOfStream(o2::framework::EndOfStreamContext& ec) final
+  {
+  }
+};
+
 DataProcessorSpec getFDDDCSConfigProcessorSpec()
 {
   o2::header::DataDescription ddDChM = "FDD_DCHM";
@@ -43,7 +75,7 @@ DataProcessorSpec getFDDDCSConfigProcessorSpec()
     Inputs{{"inputConfig", o2::header::gDataOriginFDD, "DCS_CONFIG_FILE", Lifetime::Sporadic},
            {"inputConfigFileName", o2::header::gDataOriginFDD, "DCS_CONFIG_NAME", Lifetime::Sporadic}},
     outputs,
-    AlgorithmSpec{adaptFromTask<o2::fit::FITDCSConfigProcessor>("FDD", ddDChM)},
+    AlgorithmSpec{adaptFromTask<FDDDCSConfigProcessor>("FDD", ddDChM)},
     Options{{"use-verbose-mode", VariantType::Bool, false, {"Use verbose mode"}},
             {"filename-dchm", VariantType::String, "FDD-deadchannels.txt", {"Dead channel map file name"}},
             {"valid-days-dchm", VariantType::UInt32, 180u, {"Dead channel map validity in days"}},

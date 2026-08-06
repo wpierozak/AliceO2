@@ -19,7 +19,7 @@
 
 #include "CCDB/CcdbApi.h"
 #include "DetectorsCalibration/Utils.h"
-#include "FITDCSMonitoring/FITDCSConfigReader.h"
+#include "FITDCSMonitoring/FITDeadChannelMapReader.h"
 #include "Framework/ConfigParamRegistry.h"
 #include "Framework/Task.h"
 #include "Framework/WorkflowSpec.h"
@@ -44,92 +44,68 @@ class FITDCSConfigProcessor : public o2::framework::Task
     : mDetectorName(detectorName),
       mDataDescriptionDChM(dataDescriptionDChM) {} // TODO AM: how to pass dd
 
-  void init(o2::framework::InitContext& ic) final
-  {
-    initDCSConfigReader();
-    mDCSConfigReader->setFileNameDChM(ic.options().get<std::string>("filename-dchm"));
-    mDCSConfigReader->setValidDaysDChM(ic.options().get<uint>("valid-days-dchm"));
-    mDCSConfigReader->setCcdbPathDChM(mDetectorName + "/Calib/DeadChannelMap");
-    mVerbose = ic.options().get<bool>("use-verbose-mode");
-    mDCSConfigReader->setVerboseMode(mVerbose);
-    mValidateUpload = !ic.options().get<bool>("no-validate");
-    mDCSConfigReader->setValidateUploadMode(mValidateUpload);
-
-    LOG(info) << "Verbose mode: " << mVerbose;
-    LOG(info) << "Validate upload: " << mValidateUpload;
-    LOG(info) << "Expected dead channel map file name: " << mDCSConfigReader->getFileNameDChM();
-    LOG(info) << "Dead channel maps will be valid for " << mDCSConfigReader->getValidDaysDChM() << " days";
-  }
-
-  void run(o2::framework::ProcessingContext& pc) final
-  {
-    // Get the time of the data
-    auto timeNow = std::chrono::high_resolution_clock::now();
-    long dataTime = (long)(pc.services().get<o2::framework::TimingInfo>().creation);
-    if (dataTime == 0xffffffffffffffff) {                                                                   // means it is not set
-      dataTime = std::chrono::duration_cast<std::chrono::milliseconds>(timeNow.time_since_epoch()).count(); // in ms
-    }
-
-    // Get the input file
-    gsl::span<const char> configBuf = pc.inputs().get<gsl::span<char>>("inputConfig");
-    std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
-    LOG(info) << "Got input file " << configFileName << " of size " << configBuf.size();
-
-    if (!configFileName.compare(mDCSConfigReader->getFileNameDChM())) {
-      // Got dead channel map
-      processDChM(dataTime, configBuf);
-      sendDChMOutput(pc.outputs());
-      mDCSConfigReader->resetStartValidityDChM();
-      mDCSConfigReader->resetDChM();
-    } else {
-      LOG(error) << "Unknown input file: " << configFileName;
-    }
-  }
-
-  void endOfStream(o2::framework::EndOfStreamContext& ec) final
-  {
-  }
-
  protected:
   /// Initializes the DCS config reader.
-  /// Can be overriden in case another reader (subclass of o2::fit::FITDCSConfigReader) is needed.
-  virtual void initDCSConfigReader()
+  /// Can be overriden in case another reader (subclass of o2::fit::FITDeadChannelMapReader) is needed.
+  virtual void initDeadChannelMapReader()
   {
-    mDCSConfigReader = std::make_unique<FITDCSConfigReader>(FITDCSConfigReader());
+    mDeadChannelMapReader = std::make_unique<FITDeadChannelMapReader>(FITDeadChannelMapReader());
   }
 
-  std::unique_ptr<FITDCSConfigReader> mDCSConfigReader; ///< Reader for the DCS configurations
-
- private:
-  /// Processing the dead channel map
-  void processDChM(const long& dataTime, gsl::span<const char> configBuf)
-  {
-    if (!mDCSConfigReader->isStartValidityDChMSet()) {
-      if (mVerbose) {
-        LOG(info) << "Start validity for DCS data set to = " << dataTime;
-      }
-      mDCSConfigReader->setStartValidityDChM(dataTime);
+  long getValidityTime(o2::framework::ProcessingContext& pc) {
+    long dataTime = (long)(pc.services().get<o2::framework::TimingInfo>().creation);
+    if (dataTime == 0xffffffffffffffff) {                                                               // means it is not set
+      dataTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(); // in ms
     }
-    mDCSConfigReader->processDChM(configBuf);
-    mDCSConfigReader->updateDChMCcdbObjectInfo();
+    return dataTime;
+  } 
+
+  void setupDeadChannelMapReader(o2::framework::InitContext& ic) {
+    mDeadChannelMapReader->setFileNameDChM(ic.options().get<std::string>("filename-dchm"));
+    mDeadChannelMapReader->setValidDaysDChM(ic.options().get<uint>("valid-days-dchm"));
+    mDeadChannelMapReader->setCcdbPathDChM(mDetectorName + "/Calib/DeadChannelMap");
+    bool verbose = ic.options().get<bool>("use-verbose-mode");
+    mDeadChannelMapReader->setVerboseMode(verbose);
+    bool validateUpload = !ic.options().get<bool>("no-validate");
+    mDeadChannelMapReader->setValidateUploadMode(validateUpload);
+
+    LOG(info) << "Verbose mode: " << verbose;
+    LOG(info) << "Validate upload: " << validateUpload;
+    LOG(info) << "Expected dead channel map file name: " << mDeadChannelMapReader->getFileNameDChM();
+    LOG(info) << "Dead channel maps will be valid for " << mDeadChannelMapReader->getValidDaysDChM() << " days";
   }
 
-  /// Sending the dead channeel map output to CCDB
-  void sendDChMOutput(o2::framework::DataAllocator& output)
+  void handleDeadChannelMapUpdate(o2::framework::ProcessingContext& pc, long dataTime, gsl::span<const char> dataBuffer) {
+    processDeadChannelMap(dataTime, dataBuffer);
+    sendObject(pc.outputs(), mDeadChannelMapReader->getDChM(), mDeadChannelMapReader->getObjectInfoDChM(), mDataDescriptionDChM);
+    mDeadChannelMapReader->resetStartValidityDChM();
+    mDeadChannelMapReader->resetDChM();
+  }
+
+  /// Processing the dead channel map
+  void processDeadChannelMap(const long& dataTime, gsl::span<const char> dataBuffer)
   {
-    const auto& payload = mDCSConfigReader->getDChM();
-    auto& info = mDCSConfigReader->getObjectInfoDChM();
-    auto image = o2::ccdb::CcdbApi::createObjectImage(&payload, &info);
+    if (!mDeadChannelMapReader->isStartValidityDChMSet()) {
+      mDeadChannelMapReader->setStartValidityDChM(dataTime);
+    }
+    mDeadChannelMapReader->processDChM(dataBuffer);
+    mDeadChannelMapReader->updateDChMCcdbObjectInfo();
+  }
+
+  template<typename ConfigObjectType>
+  void sendObject(o2::framework::DataAllocator& output, const ConfigObjectType& object, o2::ccdb::CcdbObjectInfo& info, const o2::header::DataDescription& descriptor)
+  {
+    auto image = o2::ccdb::CcdbApi::createObjectImage(&object, &info);
     LOG(info) << "Sending object " << info.getPath() << "/" << info.getFileName() << " of size " << image->size()
               << " bytes, valid for " << info.getStartValidityTimestamp() << " : " << info.getEndValidityTimestamp();
-    output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, mDataDescriptionDChM, 0}, *image.get());
-    output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, mDataDescriptionDChM, 0}, info);
+    output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, descriptor, 0}, *image.get());
+    output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, descriptor, 0}, info);
   }
 
+  std::unique_ptr<FITDeadChannelMapReader> mDeadChannelMapReader;
+ private:
   std::string mDetectorName;                        ///< Detector name
   o2::header::DataDescription mDataDescriptionDChM; ///< DataDescription for the dead channel map
-  bool mVerbose = false;                            ///< Verbose mode
-  bool mValidateUpload = true;                      ///< Validate upload
 };
 
 } // namespace fit

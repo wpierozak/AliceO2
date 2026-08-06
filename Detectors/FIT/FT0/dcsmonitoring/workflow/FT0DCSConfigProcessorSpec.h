@@ -18,7 +18,6 @@
 #define O2_FT0_DCSCONFIGPROCESSOR_H
 
 #include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
-#include "FT0DCSMonitoring/FT0DCSConfigReader.h"
 #include "DetectorsCalibration/Utils.h"
 #include "Framework/WorkflowSpec.h"
 #include "Headers/DataHeader.h"
@@ -33,15 +32,33 @@ namespace ft0
 
 class FT0DCSConfigProcessor : public o2::fit::FITDCSConfigProcessor
 {
-  // Example of how to use another DCS config reader (subclass of o2::fit::FITDCSConfigReader)
  public:
   FT0DCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
     : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM) {}
 
- protected:
-  void initDCSConfigReader() override
+  void init(o2::framework::InitContext& ic) final
   {
-    mDCSConfigReader = std::make_unique<FT0DCSConfigReader>(FT0DCSConfigReader());
+    initDeadChannelMapReader();
+    setupDeadChannelMapReader(ic);
+  }
+
+  void run(o2::framework::ProcessingContext& pc) final
+  {
+    long dataTime = getValidityTime(pc);
+
+    gsl::span<const char> dataBuffer = pc.inputs().get<gsl::span<char>>("inputConfig");
+    std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
+    LOG(info) << "Got input file " << configFileName << " of size " << dataBuffer.size();
+
+    if (!configFileName.compare(mDeadChannelMapReader->getFileNameDChM())) {
+      handleDeadChannelMapUpdate(pc,dataTime, dataBuffer);
+    } else {
+      LOG(error) << "Unknown input file: " << configFileName;
+    }
+  }
+
+  void endOfStream(o2::framework::EndOfStreamContext& ec) final
+  {
   }
 };
 

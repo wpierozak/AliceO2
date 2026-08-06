@@ -17,7 +17,7 @@
 #ifndef O2_FT0_DCSCONFIGREADER_H
 #define O2_FT0_DCSCONFIGREADER_H
 
-#include "FITDCSMonitoring/FITDCSConfigReader.h"
+#include "FITDCSMonitoring/FITDeadChannelMapReader.h"
 #include "Rtypes.h"
 #include "DataFormatsFT0/FeeConfiguration.h"
 
@@ -27,7 +27,7 @@ namespace ft0
 {
 
 /// DCS configuration reader for FT0
-class FT0DCSConfigReader : public o2::fit::FITDCSConfigReader
+class FT0DCSConfigReader : public o2::fit::FITDeadChannelMapReader
 {
   public:
   Ft0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
