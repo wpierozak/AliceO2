@@ -22,13 +22,19 @@
 
 namespace o2::ft0
 {
-class FT0FEEConfigurationReader : public o2::fit::FITFEEConfigurationReader {
-  public:
+class FT0FEEConfigurationReader : public o2::fit::FITFEEConfigurationReader
+{
+ public:
+  FT0FEEConfigurationReader()
+  {
+    setDataDescriptor("FT0_FEE_CONFIG");
+  }
   Ft0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
-  private:
+
+ private:
   void parseFT0TriggersConfiguration(const rapidjson::Value& root, const char* triggersNodeName, TriggersConfig& config);
 };
 
-} // namespace ft0
+} // namespace o2::ft0
 
 #endif // O2_FT0_DCSCONFIGREADER_H

@@ -21,25 +21,19 @@
 #include <rapidjson/schema.h>
 #include "DataFormatsFIT/Configuration.h"
 #include "DetectorsCalibration/Utils.h"
+#include "FITDCSMonitoring/FITDCSBaseConfigReader.h"
 
 namespace o2::fit
 {
-class FITFEEConfigurationReader
+class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 {
  public:
   FITFEEConfigurationReader();
 
   template <typename FeeConfigType>
-  o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string> metadata)
+  o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string>& metadata)
   {
-    o2::ccdb::CcdbObjectInfo objectInfo;
-    o2::calibration::Utils::prepareCCDBobjectInfo(configObject, objectInfo, mCcdbPath, metadata, startValidityTimestamp, o2::ccdb::CcdbObjectInfo::INFINITE_TIMESTAMP);
-    return objectInfo;
-  }
-
-  void setCcdbPath(const std::string& path)
-  {
-    mCcdbPath = path;
+    return FITDCSBaseConfigReader::createObjectInfo(configObject, startValidityTimestamp, o2::ccdb::CcdbObjectInfo::INFINITE_TIMESTAMP, metadata);
   }
 
  protected:
@@ -133,8 +127,6 @@ class FITFEEConfigurationReader
 
  private:
   static std::string configurationSchema;
-
-  std::string mCcdbPath;
   std::unique_ptr<rapidjson::SchemaDocument> mSchema;
 };
 } // namespace o2::fit

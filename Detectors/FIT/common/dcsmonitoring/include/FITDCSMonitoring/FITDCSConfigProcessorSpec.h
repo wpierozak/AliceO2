@@ -20,6 +20,7 @@
 #include "CCDB/CcdbApi.h"
 #include "DetectorsCalibration/Utils.h"
 #include "FITDCSMonitoring/FITDeadChannelMapReader.h"
+#include "FITDCSMonitoring/FITFEEConfigurationReader.h"
 #include "Framework/ConfigParamRegistry.h"
 #include "Framework/Task.h"
 #include "Framework/WorkflowSpec.h"
@@ -50,15 +51,17 @@ class FITDCSConfigProcessor : public o2::framework::Task
     mDeadChannelMapReader = std::make_unique<FITDeadChannelMapReader>(FITDeadChannelMapReader());
   }
 
-  long getValidityTime(o2::framework::ProcessingContext& pc) {
+  long getValidityTime(o2::framework::ProcessingContext& pc)
+  {
     long dataTime = (long)(pc.services().get<o2::framework::TimingInfo>().creation);
-    if (dataTime == 0xffffffffffffffff) {                                                               // means it is not set
+    if (dataTime == 0xffffffffffffffff) {                                                                                                     // means it is not set
       dataTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(); // in ms
     }
     return dataTime;
-  } 
+  }
 
-  void setupDeadChannelMapReader(o2::framework::InitContext& ic) {
+  void setupDeadChannelMapReader(o2::framework::InitContext& ic)
+  {
     mDeadChannelMapReader->setFileNameDChM(ic.options().get<std::string>("filename-dchm"));
     mDeadChannelMapReader->setValidDaysDChM(ic.options().get<uint>("valid-days-dchm"));
     mDeadChannelMapReader->setCcdbPathDChM(mDetectorName + "/Calib/DeadChannelMap");
@@ -73,7 +76,13 @@ class FITDCSConfigProcessor : public o2::framework::Task
     LOG(info) << "Dead channel maps will be valid for " << mDeadChannelMapReader->getValidDaysDChM() << " days";
   }
 
-  void handleDeadChannelMapUpdate(o2::framework::ProcessingContext& pc, long dataTime, gsl::span<const char> dataBuffer) {
+  void setupFeeConfigurationReader(o2::framework::InitContext& ic, FITFEEConfigurationReader& feeConfig)
+  {
+    feeConfig.setFilename(ic.options().get<std::string>("filename-fee-config"));
+  }
+
+  void handleDeadChannelMapUpdate(o2::framework::ProcessingContext& pc, long dataTime, gsl::span<const char> dataBuffer)
+  {
     processDeadChannelMap(dataTime, dataBuffer);
     sendObject(pc.outputs(), mDeadChannelMapReader->getDChM(), mDeadChannelMapReader->getObjectInfoDChM(), mDataDescriptionDChM);
     mDeadChannelMapReader->resetStartValidityDChM();
@@ -90,7 +99,7 @@ class FITDCSConfigProcessor : public o2::framework::Task
     mDeadChannelMapReader->updateDChMCcdbObjectInfo();
   }
 
-  template<typename ConfigObjectType>
+  template <typename ConfigObjectType>
   void sendObject(o2::framework::DataAllocator& output, const ConfigObjectType& object, o2::ccdb::CcdbObjectInfo& info, const o2::header::DataDescription& descriptor)
   {
     auto image = o2::ccdb::CcdbApi::createObjectImage(&object, &info);
@@ -101,6 +110,7 @@ class FITDCSConfigProcessor : public o2::framework::Task
   }
 
   std::unique_ptr<FITDeadChannelMapReader> mDeadChannelMapReader;
+
  private:
   std::string mDetectorName;                        ///< Detector name
   o2::header::DataDescription mDataDescriptionDChM; ///< DataDescription for the dead channel map
