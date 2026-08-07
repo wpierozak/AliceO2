@@ -76,7 +76,8 @@ class FITDCSConfigProcessor : public o2::framework::Task
     LOG(info) << "Dead channel maps will be valid for " << mDeadChannelMapReader->getValidDaysDChM() << " days";
   }
 
-  void setupFeeConfigurationReader(o2::framework::InitContext& ic, FITFEEConfigurationReader& feeConfig)
+  template <typename ConfigurationReaderType>
+  void setupFeeConfigurationReader(o2::framework::InitContext& ic, FITFEEConfigurationReader<ConfigurationReaderType>& feeConfig)
   {
     feeConfig.setFilename(ic.options().get<std::string>("filename-fee-config"));
   }

@@ -25,10 +25,19 @@
 
 namespace o2::fit
 {
+template <typename ConfigurationReaderType>
 class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 {
  public:
-  FITFEEConfigurationReader();
+  FITFEEConfigurationReader()
+  {
+    rapidjson::Document schemaDocument;
+    schemaDocument.Parse(configurationSchema.c_str());
+    if (schemaDocument.HasParseError()) {
+      throw std::runtime_error("Cannot parse FIT FEE JSON schema");
+    }
+    mSchema = std::make_unique<rapidjson::SchemaDocument>(schemaDocument);
+  }
 
   template <typename FeeConfigType>
   o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string>& metadata)
@@ -37,6 +46,25 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
   }
 
  protected:
+  template <typename ConfigType>
+  ConfigType parseFeeConfiguration(gsl::span<const char> buffer)
+  {
+    ConfigType configuration;
+    rapidjson::MemoryStream ms(buffer.data(), buffer.size());
+    rapidjson::Document document;
+    document.ParseStream(ms);
+
+    if (validateSchema(document) == false) {
+      std::string_view bufferView(buffer.data(), buffer.size());
+      throw std::runtime_error(std::format("Received document does not match FEE configuration schema! Document: {}; Schema: {}", bufferView, getSchemaString()));
+    }
+
+    parseChannelData(document, "channels", configuration.channels);
+    parseTcmConfig(document, "tcm", configuration.tcm);
+    parsePmsArray(document, "pm_a", configuration.pmA);
+    parsePmsArray(document, "pm_c", configuration.pmC);
+    static_cast<ConfigurationReaderType*>(this)->parseTriggers(document, "triggers", configuration.triggers);
+  }
   template <typename T, int Size>
   void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
   {
@@ -92,8 +120,29 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     parseJsonArray(channelsNode, "channel_mask_triggers", channelsConfiguration.channelMaskTriggers);
   }
 
-  void parseTcmConfig(const rapidjson::Value& root, const char* tcmNodeName, TcmConfig& tcmConfig);
-  void parsePmConfig(const rapidjson::Value& pmNode, PmConfig& pmConfig);
+  void parseTcmConfig(const rapidjson::Value& root, const char* tcmNodeName, TcmConfig& tcmConfig)
+  {
+    if (!root.HasMember(tcmNodeName)) {
+      std::runtime_error(std::format("Cannot find {}", tcmNodeName));
+    }
+    const auto& tcmNode = root[tcmNodeName];
+    if (!tcmNode.HasMember("phase_delay_a") || !tcmNode.HasMember("phase_delay_c")) {
+      throw std::runtime_error("Invalid TCM configuration node!");
+    }
+    const auto& phaseDelayANode = tcmNode["phase_delay_a"];
+    const auto& phaseDelayCNode = tcmNode["phase_delay_c"];
+    tcmConfig.phaseDelayA = phaseDelayANode.GetDouble();
+    tcmConfig.phaseDelayC = phaseDelayCNode.GetDouble();
+  }
+
+  void parsePmConfig(const rapidjson::Value& pmNode, PmConfig& pmConfig)
+  {
+    if (!pmNode.HasMember("or_gate")) {
+      throw std::runtime_error("Invalid PM configuration node");
+    }
+    const auto& orGateNode = pmNode["or_gate"];
+    pmConfig.orGate = orGateNode.GetUint();
+  }
 
   template <int Size>
   void parsePmsArray(const rapidjson::Value& root, const char* pmArrayNodeName, PmConfig (&pmConfig)[Size])
@@ -118,7 +167,14 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     }
   }
 
-  bool validateSchema(const rapidjson::Document& docs);
+  bool validateSchema(const rapidjson::Document& docs)
+  {
+    rapidjson::SchemaValidator validator(*mSchema);
+    if (docs.Accept(validator) == false) {
+      return false;
+    }
+    return true;
+  }
 
   const std::string& getSchemaString() const
   {
@@ -126,9 +182,52 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
   }
 
  private:
-  static std::string configurationSchema;
+  static const std::string configurationSchema;
   std::unique_ptr<rapidjson::SchemaDocument> mSchema;
 };
+
+template <class ConfigurationReaderType>
+const std::string FITFEEConfigurationReader<ConfigurationReaderType>::configurationSchema = R"SCH(
+        {
+        "type": "object",
+        "properties": {
+            "channels": {
+                "type": "object",
+                "properties": {
+                    "time_aligments": {"type": "array"},
+                    "cfd_thresholds": {"type": "array"},
+                    "cfd_zeros": {"type": "array"},
+                    "adc_zeros": {"type": "array"},
+                    "adc_delays": {"type": "array"},
+                    "channel_mask_data": {"type": "array"},
+                    "channel_mask_triggers": {"type": "array"}
+                },
+                "required": ["time_aligments", "cfd_thresholds", "cfd_zeros",
+                "adc_zeros", "adc_delays", "channel_mask_data", "channel_mask_triggers"]
+            },
+            "tcm" : {
+                "type": "object",
+                "properties": {
+                    "phase_delay_a": {"type": "number"},
+                    "phase_delay_c": {"type": "number"}
+                }
+            },
+            "pm_a":{
+                "type": "array",
+                "items": {"type": "object"}
+            },
+            "pm_c": {
+                "type": "array",
+                "items": {"type": "object"}
+            },
+            "triggers": {
+                "type": "object",
+                "additionalProperties" : { "type": "number" }
+            }
+        },
+        "required": ["channels", "tcm", "triggers"]
+    }
+    )SCH";
 } // namespace o2::fit
 
 #endif
