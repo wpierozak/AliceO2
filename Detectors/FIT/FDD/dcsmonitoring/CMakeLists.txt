@@ -10,7 +10,7 @@
 # or submit itself to any jurisdiction.
 
 o2_add_library(FDDDCSMonitoring
-               SOURCES src/FDDDCSDataProcessor.cxx
+               SOURCES src/FDDDCSDataProcessor.cxx src/FDDDCSConfigProcessor.cxx
                PUBLIC_LINK_LIBRARIES O2::FITDCSMonitoring)
 
 o2_add_executable(dcs-sim-workflow
@@ -30,4 +30,5 @@ o2_add_executable(dcs-config-workflow
                   SOURCES workflow/fdd-dcs-config-workflow.cxx
                   PUBLIC_LINK_LIBRARIES O2::DetectorsCalibration
                                         O2::FITDCSMonitoring
-                                        O2::Framework)
+                                        O2::Framework
+                                        O2::FDDDCSMonitoring)
