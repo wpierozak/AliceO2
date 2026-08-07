@@ -18,122 +18,125 @@
 #define O2_FIT_DCS_CONFIGURATION_DATA_READER_H
 
 #include <rapidjson/document.h>
+#include <rapidjson/schema.h>
 #include "DataFormatsFIT/Configuration.h"
 #include "DetectorsCalibration/Utils.h"
 
-namespace o2::fit {
-class FITFEEConfigurationReader {
-public:
-template<typename FeeConfigType>
-o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string> metadata) {
+namespace o2::fit
+{
+class FITFEEConfigurationReader
+{
+ public:
+  FITFEEConfigurationReader();
+
+  template <typename FeeConfigType>
+  o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string> metadata)
+  {
     o2::ccdb::CcdbObjectInfo objectInfo;
     o2::calibration::Utils::prepareCCDBobjectInfo(configObject, objectInfo, mCcdbPath, metadata, startValidityTimestamp, o2::ccdb::CcdbObjectInfo::INFINITE_TIMESTAMP);
     return objectInfo;
-}
-void setCcdbPath(const std::string& path) {
+  }
+
+  void setCcdbPath(const std::string& path)
+  {
     mCcdbPath = path;
-}
-protected:
-    template <typename T, int Size>
-    void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
-    {
-        if (node.HasMember(childName) == false) {
-            throw std::runtime_error(std::string("Failed to find node of name ") + childName);
-        }
-        const auto& childNode = node[childName];
-        if (childNode.IsArray() == false) {
-            throw std::runtime_error(std::format("Node {} is not an array!", childName));
-        }
-        auto jsonArray = childNode.GetArray();
-        if (jsonArray.Size() != Size) {
-            throw std::runtime_error(std::format("Expected array of size {}, parsed array of size {}", Size, jsonArray.Size()));
-        }
-        for (int idx = 0; idx < Size; idx++) {
-            const auto& node = jsonArray[idx];
-            if constexpr (std::is_same_v<T, bool>) {
-                if (!node.IsBool()) {
-                    throw std::runtime_error(std::format("{} is not a bool array", childName));
-                }
-                array[idx] = node.GetBool();
-            } else if constexpr (std::is_floating_point_v<T>) {
-                if (!node.IsNumber()) {
-                    throw std::runtime_error(std::format("{} is not an floating point array", childName));
-                }
-                array[idx] = node.GetFloat();
-            } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
-                if (!node.IsUint() ){
-                    throw std::runtime_error(std::format("{} is not an unsigned integer array", childName));
-                }
-                array[idx] = static_cast<T>(node.GetUint());
-            } else if constexpr (std::is_integral_v<T>) {
-                if (!node.IsInt()) {
-                    throw std::runtime_error(std::format("{} is not an integer array", childName));
-                }
-                array[idx] = static_cast<T>(node.GetInt());
-            } else {
-                static_assert(std::is_same_v<T, void>, "Unsupported type");
-            }
-        }
-    }
+  }
 
-    template<int Size>
-    void parseChannelData(const rapidjson::Value& root, const char* channelsNodeName, ChannelsConfig<Size>& channelsConfiguration) {
-        const auto& channelsNode = root["channels"];
-        parseJsonArray(channelsNode, "time_aligments", channelsConfiguration.timeAligments);
-        parseJsonArray(channelsNode, "cfd_thresholds", channelsConfiguration.cfdThresholds);
-        parseJsonArray(channelsNode, "cfd_zeros", channelsConfiguration.cfdZeros);
-        parseJsonArray(channelsNode, "adc_zeros", channelsConfiguration.adcZeros);
-        parseJsonArray(channelsNode, "adc_delays", channelsConfiguration.adcDelays);
-        parseJsonArray(channelsNode, "channel_mask_data", channelsConfiguration.channelMaskData);
-        parseJsonArray(channelsNode, "channel_mask_triggers", channelsConfiguration.channelMaskTriggers);
+ protected:
+  template <typename T, int Size>
+  void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
+  {
+    if (node.HasMember(childName) == false) {
+      throw std::runtime_error(std::string("Failed to find node of name ") + childName);
     }
+    const auto& childNode = node[childName];
+    if (childNode.IsArray() == false) {
+      throw std::runtime_error(std::format("Node {} is not an array!", childName));
+    }
+    auto jsonArray = childNode.GetArray();
+    if (jsonArray.Size() != Size) {
+      throw std::runtime_error(std::format("Expected array of size {}, parsed array of size {}", Size, jsonArray.Size()));
+    }
+    for (int idx = 0; idx < Size; idx++) {
+      const auto& node = jsonArray[idx];
+      if constexpr (std::is_same_v<T, bool>) {
+        if (!node.IsBool()) {
+          throw std::runtime_error(std::format("{} is not a bool array", childName));
+        }
+        array[idx] = node.GetBool();
+      } else if constexpr (std::is_floating_point_v<T>) {
+        if (!node.IsNumber()) {
+          throw std::runtime_error(std::format("{} is not an floating point array", childName));
+        }
+        array[idx] = node.GetFloat();
+      } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+        if (!node.IsUint()) {
+          throw std::runtime_error(std::format("{} is not an unsigned integer array", childName));
+        }
+        array[idx] = static_cast<T>(node.GetUint());
+      } else if constexpr (std::is_integral_v<T>) {
+        if (!node.IsInt()) {
+          throw std::runtime_error(std::format("{} is not an integer array", childName));
+        }
+        array[idx] = static_cast<T>(node.GetInt());
+      } else {
+        static_assert(std::is_same_v<T, void>, "Unsupported type");
+      }
+    }
+  }
 
-    void parseTcmConfig(const rapidjson::Value& root, const char* tcmNodeName, TcmConfig& tcmConfig) {
-        if (!root.HasMember(tcmNodeName)) {
-            std::runtime_error(std::format("Cannot find {}", tcmNodeName));
-        }
-        const auto& tcmNode = root[tcmNodeName];
-        if (!tcmNode.HasMember("phase_delay_a") || !tcmNode.HasMember("phase_delay_c")) {
-            throw std::runtime_error("Invalid TCM configuration node!");
-        }
-        const auto& phaseDelayANode = tcmNode["phase_delay_a"];
-        const auto& phaseDelayCNode = tcmNode["phase_delay_c"];
-        tcmConfig.phaseDelayA = phaseDelayANode.GetDouble();
-        tcmConfig.phaseDelayC = phaseDelayCNode.GetDouble();
-    }
+  template <int Size>
+  void parseChannelData(const rapidjson::Value& root, const char* channelsNodeName, ChannelsConfig<Size>& channelsConfiguration)
+  {
+    const auto& channelsNode = root["channels"];
+    parseJsonArray(channelsNode, "time_aligments", channelsConfiguration.timeAligments);
+    parseJsonArray(channelsNode, "cfd_thresholds", channelsConfiguration.cfdThresholds);
+    parseJsonArray(channelsNode, "cfd_zeros", channelsConfiguration.cfdZeros);
+    parseJsonArray(channelsNode, "adc_zeros", channelsConfiguration.adcZeros);
+    parseJsonArray(channelsNode, "adc_delays", channelsConfiguration.adcDelays);
+    parseJsonArray(channelsNode, "channel_mask_data", channelsConfiguration.channelMaskData);
+    parseJsonArray(channelsNode, "channel_mask_triggers", channelsConfiguration.channelMaskTriggers);
+  }
 
-    void parsePmConfig(const rapidjson::Value& pmNode, PmConfig& pmConfig) {
-        if (!pmNode.HasMember("or_gate")) {
-            throw std::runtime_error("Invalid PM configuration node");
-        }
-        const auto& orGateNode = pmNode["or_gate"];
-        pmConfig.orGate = orGateNode.GetUint();
-    }
+  void parseTcmConfig(const rapidjson::Value& root, const char* tcmNodeName, TcmConfig& tcmConfig);
+  void parsePmConfig(const rapidjson::Value& pmNode, PmConfig& pmConfig);
 
-    template<int Size>
-    void parsePmsArray(const rapidjson::Value& root, const char* pmArrayNodeName, PmConfig (&pmConfig)[Size]) {
-        if(root.HasMember(pmArrayNodeName) == false) {
-            throw std::runtime_error(std::format("Failed to find {} node", pmArrayNodeName));
-        }
-        const auto& pmArrayNode = root[pmArrayNodeName];
-        if(pmArrayNode.IsArray() == false) {
-            std::runtime_error(std::format("{} node is not an array!", pmArrayNodeName));
-        }
-        const auto& pmArray = pmArrayNode.GetArray();
-        if (pmArray.Size() != Size) {
-            throw std::runtime_error(std::format("Received data for {} PMs, but expected {}", pmArray.Size(), Size));
-        }
-        for(int idx = 0; idx < pmArray.Size(); idx++) {
-            const auto& pm = pmArray[idx];
-            if(pm.IsObject() == false) {
-                throw std::runtime_error("Encountered non-object element in PM array");
-            }
-            parsePmConfig(pm, pmConfig[idx]);
-        }
+  template <int Size>
+  void parsePmsArray(const rapidjson::Value& root, const char* pmArrayNodeName, PmConfig (&pmConfig)[Size])
+  {
+    if (root.HasMember(pmArrayNodeName) == false) {
+      throw std::runtime_error(std::format("Failed to find {} node", pmArrayNodeName));
     }
-private:
-    std::string mCcdbPath;
+    const auto& pmArrayNode = root[pmArrayNodeName];
+    if (pmArrayNode.IsArray() == false) {
+      std::runtime_error(std::format("{} node is not an array!", pmArrayNodeName));
+    }
+    const auto& pmArray = pmArrayNode.GetArray();
+    if (pmArray.Size() != Size) {
+      throw std::runtime_error(std::format("Received data for {} PMs, but expected {}", pmArray.Size(), Size));
+    }
+    for (int idx = 0; idx < pmArray.Size(); idx++) {
+      const auto& pm = pmArray[idx];
+      if (pm.IsObject() == false) {
+        throw std::runtime_error("Encountered non-object element in PM array");
+      }
+      parsePmConfig(pm, pmConfig[idx]);
+    }
+  }
+
+  bool validateSchema(const rapidjson::Document& docs);
+
+  const std::string& getSchemaString() const
+  {
+    return configurationSchema;
+  }
+
+ private:
+  static std::string configurationSchema;
+
+  std::string mCcdbPath;
+  std::unique_ptr<rapidjson::SchemaDocument> mSchema;
 };
-}
+} // namespace o2::fit
 
 #endif

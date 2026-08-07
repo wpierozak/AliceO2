@@ -13,6 +13,7 @@ o2_add_library(FITDCSMonitoring
                SOURCES src/FITDCSDataProcessor.cxx
                        src/FITDCSDataReader.cxx
                        src/FITDeadChannelMapReader.cxx
+                       src/FITFEEConfigurationReader.cxx
                PUBLIC_LINK_LIBRARIES O2::DataFormatsFIT
                                      O2::DetectorsCalibration
                                      O2::DetectorsDCS)

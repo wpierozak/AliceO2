@@ -11,6 +11,11 @@ Ft0FeeConfiguration FT0FEEConfigurationReader::parseFeeConfiguration(gsl::span<c
   rapidjson::Document document;
   document.ParseStream(ms);
 
+  if (validateSchema(document) == false) {
+    std::string_view bufferView(buffer.data(), buffer.size());
+    throw std::runtime_error(std::format("Received document does not match FEE configuration schema! Document: {}; Schema: {}", bufferView, getSchemaString()));
+  }
+
   parseChannelData(document, "channels", configuration.channels);
   parseTcmConfig(document, "tcm", configuration.tcm);
   parsePmsArray(document, "pm_a", configuration.pmA);
@@ -18,7 +23,8 @@ Ft0FeeConfiguration FT0FEEConfigurationReader::parseFeeConfiguration(gsl::span<c
   parseFT0TriggersConfiguration(document, "triggers", configuration.triggers);
 }
 
-void FT0FEEConfigurationReader::parseFT0TriggersConfiguration(const rapidjson::Value& root, const char* triggersNodeName, TriggersConfig& config) {
+void FT0FEEConfigurationReader::parseFT0TriggersConfiguration(const rapidjson::Value& root, const char* triggersNodeName, TriggersConfig& config)
+{
   const auto& triggersNode = root["triggers"];
   const auto& vertexTimeLowThresholdNode = triggersNode["vertex_time_low_threshold"];
   const auto& vertexTimeHighThresholdNode = triggersNode["vertex_time_high_threshold"];
