@@ -34,6 +34,10 @@ DataProcessorSpec getFT0DCSConfigProcessorSpec()
   outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, ddDChM}, Lifetime::Sporadic);
   outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, ddDChM}, Lifetime::Sporadic);
 
+  o2::header::DataDescription feeConifg = "FT0_FEE_CONFIG";
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, feeConifg}, Lifetime::Sporadic);
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, feeConifg}, Lifetime::Sporadic);
+
   return DataProcessorSpec{
     "ft0-dcs-config-processor",
     Inputs{{"inputConfig", o2::header::gDataOriginFT0, "DCS_CONFIG_FILE", Lifetime::Sporadic},
@@ -43,7 +47,10 @@ DataProcessorSpec getFT0DCSConfigProcessorSpec()
     Options{{"use-verbose-mode", VariantType::Bool, false, {"Use verbose mode"}},
             {"filename-dchm", VariantType::String, "FT0-deadchannels.txt", {"Dead channel map file name"}},
             {"valid-days-dchm", VariantType::UInt32, 180u, {"Dead channel map validity in days"}},
-            {"no-validate", VariantType::Bool, false, {"Don't validate the CCDB uploads"}}}};
+            {"no-validate", VariantType::Bool, false, {"Don't validate the CCDB uploads"}},
+            {"filename-fee-config", VariantType::String, "ft0-fee-config.json", {"FEE configuration file name"}}
+          }
+  };
 }
 
 } // namespace framework
