@@ -80,6 +80,8 @@ class FITDCSConfigProcessor : public o2::framework::Task
   void setupFeeConfigurationReader(o2::framework::InitContext& ic, FITFEEConfigurationReader<ConfigurationReaderType>& feeConfig)
   {
     feeConfig.setFilename(ic.options().get<std::string>("filename-fee-config"));
+    feeConfig.setCcdbPath(mDetectorName + "/Config/FeeConfiguration");
+    feeConfig.setValidityPeriodInDays(ic.options().get<uint32_t>("valid-days-fee-config"));
   }
 
   void handleDeadChannelMapUpdate(o2::framework::ProcessingContext& pc, long dataTime, gsl::span<const char> dataBuffer)

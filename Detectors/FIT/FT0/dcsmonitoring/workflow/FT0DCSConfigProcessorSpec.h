@@ -48,11 +48,10 @@ DataProcessorSpec getFT0DCSConfigProcessorSpec()
             {"filename-dchm", VariantType::String, "FT0-deadchannels.txt", {"Dead channel map file name"}},
             {"valid-days-dchm", VariantType::UInt32, 180u, {"Dead channel map validity in days"}},
             {"no-validate", VariantType::Bool, false, {"Don't validate the CCDB uploads"}},
-            {"filename-fee-config", VariantType::String, "ft0-fee-config.json", {"FEE configuration file name"}}
-          }
-  };
+            {"filename-fee-config", VariantType::String, "ft0-fee-config.json", {"FEE configuration file name"}},
+            {"valid-days-fee-config", VariantType::UInt32, 180u, {"FEE configuration validity in days"}}}};
 }
 
-} // namespace framework
+} // namespace o2::framework
 
 #endif // O2_FT0_DCSCONFIGPROCESSOR_SPEC_H

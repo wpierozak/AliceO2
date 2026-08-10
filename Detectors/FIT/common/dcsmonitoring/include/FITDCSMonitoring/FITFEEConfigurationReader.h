@@ -42,7 +42,22 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
   template <typename FeeConfigType>
   o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string>& metadata)
   {
-    return FITDCSBaseConfigReader::createObjectInfo(configObject, startValidityTimestamp, o2::ccdb::CcdbObjectInfo::INFINITE_TIMESTAMP, metadata);
+    return FITDCSBaseConfigReader::createObjectInfo(configObject, startValidityTimestamp, getValidityTimestamp(startValidityTimestamp), metadata);
+  }
+
+  long getValidityTimestamp(long startTimestamp)
+  {
+    return startTimestamp + mValidDays * o2::ccdb::CcdbObjectInfo::DAY;
+  }
+
+  void setValidityPeriodInDays(long days)
+  {
+    mValidDays = days;
+  }
+
+  long getValidityPeriodInDays()
+  {
+    return mValidDays;
   }
 
  protected:
@@ -80,7 +95,7 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     }
     auto jsonArray = childNode.GetArray();
     if (jsonArray.Size() != Size) {
-      throw std::runtime_error(std::format("Expected array of size {}, parsed array of size {}", Size, jsonArray.Size()));
+      throw std::runtime_error(std::format("Array {}. Expected array of size {}, parsed array of size {}", childName, Size, jsonArray.Size()));
     }
     for (int idx = 0; idx < Size; idx++) {
       const auto& node = jsonArray[idx];
@@ -199,6 +214,7 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
  private:
   static const std::string configurationSchema;
   std::unique_ptr<rapidjson::SchemaDocument> mSchema;
+  long mValidDays{180u};
 };
 
 template <class ConfigurationReaderType>

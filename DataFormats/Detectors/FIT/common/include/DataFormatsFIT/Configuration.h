@@ -22,6 +22,7 @@
 #include <limits>
 #include <type_traits>
 #include <algorithm>
+#include <Rtypes.h>
 
 namespace o2::fit
 {
@@ -56,12 +57,14 @@ struct TcmConfig {
   float phaseDelayC{config_helpers::DefaultValue};
 
   bool operator==(const TcmConfig&) const = default;
+  ClassDefNV(TcmConfig, 1);
 };
 
 struct PmConfig {
   uint8_t orGate{config_helpers::DefaultValue};
-
+  // charge thershold
   bool operator==(const PmConfig&) const = default;
+  ClassDefNV(PmConfig, 1);
 };
 
 template <int NChannels>
@@ -116,6 +119,8 @@ struct ChannelsConfig {
            std::equal(std::begin(channelMaskTriggers), std::end(channelMaskTriggers),
                       std::begin(other.channelMaskTriggers));
   }
+
+  ClassDefNV(ChannelsConfig<NChannels>, 1);
 };
 } // namespace o2::fit
 #endif
