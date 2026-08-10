@@ -54,9 +54,10 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     rapidjson::Document document;
     document.ParseStream(ms);
 
-    if (validateSchema(document) == false) {
+    std::string validationErrorMessage;
+    if (validateSchema(document, validationErrorMessage) == false) {
       std::string_view bufferView(buffer.data(), buffer.size());
-      throw std::runtime_error(std::format("Received document does not match FEE configuration schema! Document: {}; Schema: {}", bufferView, getSchemaString()));
+      throw std::runtime_error("Received document does not match FEE configuration schema! Error message: " + validationErrorMessage);
     }
 
     parseChannelData(document, "channels", configuration.channels);
@@ -64,6 +65,8 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     parsePmsArray(document, "pm_a", configuration.pmA);
     parsePmsArray(document, "pm_c", configuration.pmC);
     static_cast<ConfigurationReaderType*>(this)->parseTriggers(document, "triggers", configuration.triggers);
+
+    return configuration;
   }
   template <typename T, int Size>
   void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
@@ -110,7 +113,7 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
   template <int Size>
   void parseChannelData(const rapidjson::Value& root, const char* channelsNodeName, ChannelsConfig<Size>& channelsConfiguration)
   {
-    const auto& channelsNode = root["channels"];
+    const auto& channelsNode = root[channelsNodeName];
     parseJsonArray(channelsNode, "time_aligments", channelsConfiguration.timeAligments);
     parseJsonArray(channelsNode, "cfd_thresholds", channelsConfiguration.cfdThresholds);
     parseJsonArray(channelsNode, "cfd_zeros", channelsConfiguration.cfdZeros);
@@ -167,10 +170,22 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     }
   }
 
-  bool validateSchema(const rapidjson::Document& docs)
+  bool validateSchema(const rapidjson::Document& docs, std::string& errorMessage)
   {
     rapidjson::SchemaValidator validator(*mSchema);
     if (docs.Accept(validator) == false) {
+      rapidjson::StringBuffer buffer;
+      std::ostringstream ss;
+      validator.GetInvalidSchemaPointer().StringifyUriFragment(buffer);
+      ss << "Invalid schema: " << buffer.GetString() << '\n';
+      ss << "Invalid keyword: " << validator.GetInvalidSchemaKeyword() << '\n';
+
+      buffer.Clear();
+
+      validator.GetInvalidDocumentPointer().StringifyUriFragment(buffer);
+      ss << "Invalid document: " << buffer.GetString() << '\n';
+
+      errorMessage = ss.str();
       return false;
     }
     return true;
@@ -194,13 +209,13 @@ const std::string FITFEEConfigurationReader<ConfigurationReaderType>::configurat
             "channels": {
                 "type": "object",
                 "properties": {
-                    "time_aligments": {"type": "array"},
-                    "cfd_thresholds": {"type": "array"},
-                    "cfd_zeros": {"type": "array"},
-                    "adc_zeros": {"type": "array"},
-                    "adc_delays": {"type": "array"},
-                    "channel_mask_data": {"type": "array"},
-                    "channel_mask_triggers": {"type": "array"}
+                    "time_aligments": {"type": "array", "items": {"type": "integer"}},
+                    "cfd_thresholds": {"type": "array", "items": {"type": "integer"}},
+                    "cfd_zeros": {"type": "array", "items": {"type": "integer"}},
+                    "adc_zeros": {"type": "array", "items": {"type": "integer"}},
+                    "adc_delays": {"type": "array", "items": {"type": "integer"}},
+                    "channel_mask_data": {"type": "array", "items": {"type": "boolean"}},
+                    "channel_mask_triggers": {"type": "array", "items": {"type": "boolean"}}
                 },
                 "required": ["time_aligments", "cfd_thresholds", "cfd_zeros",
                 "adc_zeros", "adc_delays", "channel_mask_data", "channel_mask_triggers"]
@@ -214,11 +229,21 @@ const std::string FITFEEConfigurationReader<ConfigurationReaderType>::configurat
             },
             "pm_a":{
                 "type": "array",
-                "items": {"type": "object"}
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "or_gate": {"type": "number"}
+                  }
+                }
             },
             "pm_c": {
                 "type": "array",
-                "items": {"type": "object"}
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "or_gate": {"type": "number"}
+                  }
+                }
             },
             "triggers": {
                 "type": "object",

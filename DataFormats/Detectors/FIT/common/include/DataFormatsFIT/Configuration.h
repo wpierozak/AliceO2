@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <algorithm>
 
 namespace o2::fit
 {
@@ -53,10 +54,14 @@ constexpr void fillDefaultArray(T (&array)[N])
 struct TcmConfig {
   float phaseDelayA{config_helpers::DefaultValue};
   float phaseDelayC{config_helpers::DefaultValue};
+
+  bool operator==(const TcmConfig&) const = default;
 };
 
 struct PmConfig {
   uint8_t orGate{config_helpers::DefaultValue};
+
+  bool operator==(const PmConfig&) const = default;
 };
 
 template <int NChannels>
@@ -93,6 +98,24 @@ struct ChannelsConfig {
   gsl::span<const uint16_t, NChannels> getAdcDelays() const { return adcDelays; }
   gsl::span<const bool, NChannels> getChannelMaskTriggers() const { return channelMaskTriggers; }
   gsl::span<const bool, NChannels> getChannelMaskData() const { return channelMaskData; }
+
+  bool operator==(const ChannelsConfig& other) const
+  {
+    return std::equal(std::begin(timeAligments), std::end(timeAligments),
+                      std::begin(other.timeAligments)) &&
+           std::equal(std::begin(cfdThresholds), std::end(cfdThresholds),
+                      std::begin(other.cfdThresholds)) &&
+           std::equal(std::begin(cfdZeros), std::end(cfdZeros),
+                      std::begin(other.cfdZeros)) &&
+           std::equal(std::begin(adcZeros), std::end(adcZeros),
+                      std::begin(other.adcZeros)) &&
+           std::equal(std::begin(adcDelays), std::end(adcDelays),
+                      std::begin(other.adcDelays)) &&
+           std::equal(std::begin(channelMaskData), std::end(channelMaskData),
+                      std::begin(other.channelMaskData)) &&
+           std::equal(std::begin(channelMaskTriggers), std::end(channelMaskTriggers),
+                      std::begin(other.channelMaskTriggers));
+  }
 };
 } // namespace o2::fit
 #endif

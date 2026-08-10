@@ -9,9 +9,8 @@
 # granted to it by virtue of its status as an Intergovernmental Organization
 # or submit itself to any jurisdiction.
 
-add_subdirectory(calibration)
-add_subdirectory(dcsmonitoring)
-if(BUILD_TESTING)
-    add_subdirectory(dcsmonitoring/macros)
-    add_subdirectory(tests)
-endif()
+o2_add_test(FITFEEConfigurationReader
+            COMPONENT_NAME fit_fee_config_reader
+            LABELS fit
+            PUBLIC_LINK_LIBRARIES O2::DataFormatsFIT O2::FITDCSMonitoring
+            SOURCES dcsmonitoring/FITFEEConfigurationReaderTest.cxx)

@@ -6,7 +6,7 @@ namespace o2::ft0
 {
 Ft0FeeConfiguration FT0FEEConfigurationReader::parseFeeConfiguration(gsl::span<const char> buffer)
 {
-  FITFEEConfigurationReader<FT0FEEConfigurationReader>::parseFeeConfiguration<Ft0FeeConfiguration>(buffer);
+  return FITFEEConfigurationReader<FT0FEEConfigurationReader>::parseFeeConfiguration<Ft0FeeConfiguration>(buffer);
 }
 
 void FT0FEEConfigurationReader::parseTriggers(const rapidjson::Value& root, const char* triggersNodeName, TriggersConfig& config)
