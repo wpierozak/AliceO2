@@ -12,28 +12,30 @@
 #ifndef O2_FDD_FEE_CONFIGURATION
 #define O2_FDD_FEE_CONFIGURATION
 
-#include "CommonUtils/ConfigurableParamHelper.h"
 #include "DataFormatsFIT/Configuration.h"
 
-namespace o2::fdd {
-struct TriggersConfig
+namespace o2::fdd
 {
-    float vertexTimeLowThreshold{o2::fit::config_helpers::DefaultValue};
-    float vertexTimeHighThreshold{o2::fit::config_helpers::DefaultValue};
-    uint16_t semicentralA{o2::fit::config_helpers::DefaultValue};
-    uint16_t semicentralC{o2::fit::config_helpers::DefaultValue};
-    uint16_t centralA{o2::fit::config_helpers::DefaultValue};
-    uint16_t centralC{o2::fit::config_helpers::DefaultValue};
+struct TriggersConfig {
+  float vertexTimeLowThreshold{o2::fit::config_helpers::DefaultValue};
+  float vertexTimeHighThreshold{o2::fit::config_helpers::DefaultValue};
+  uint16_t semicentralA{o2::fit::config_helpers::DefaultValue};
+  uint16_t semicentralC{o2::fit::config_helpers::DefaultValue};
+  uint16_t centralA{o2::fit::config_helpers::DefaultValue};
+  uint16_t centralC{o2::fit::config_helpers::DefaultValue};
+
+  ClassDefNV(TriggersConfig, 1);
 };
 
-struct FddFeeConfiguration : o2::conf::ConfigurableParamHelper<FddFeeConfiguration> {
-    static constexpr int NChannels = 16;
-    TriggersConfig triggers;
-    o2::fit::ChannelsConfig<NChannels> channels;
-    o2::fit::TcmConfig tcm;
-    o2::fit::PmConfig pmA[10];
-    o2::fit::PmConfig pmC[10];
-    O2ParamDef(FddFeeConfiguration, "FddFeeConfiguration");
+struct FddFeeConfiguration {
+  static constexpr int NChannels = 16;
+  TriggersConfig triggers;
+  o2::fit::ChannelsConfig<NChannels> channels;
+  o2::fit::TcmConfig tcm;
+  o2::fit::PmConfig pmA[10];
+  o2::fit::PmConfig pmC[10];
+
+  ClassDefNV(FddFeeConfiguration, 1);
 };
-}
+} // namespace o2::fdd
 #endif

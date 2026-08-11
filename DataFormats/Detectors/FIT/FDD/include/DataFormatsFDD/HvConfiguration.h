@@ -9,18 +9,18 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-#ifndef O2_FV0_HV_CONFIGURATION
-#define O2_FV0_HV_CONFIGURATION
+#ifndef O2_FDD_HV_CONFIGURATION
+#define O2_FDD_HV_CONFIGURATION
 
 #include "DataFormatsFIT/Configuration.h"
 #include <Rtypes.h>
 
-namespace o2::fv0
+namespace o2::fdd
 {
-struct Fv0HvConfiguration {
-  static constexpr int NChannels = 48;
+struct FddHvConfiguration {
+  static constexpr int NChannels = 16;
   o2::fit::HvChannelsConfig<NChannels> channels;
-  ClassDefNV(Fv0HvConfiguration, 1);
+  ClassDefNV(FddHvConfiguration, 1);
 };
-} // namespace o2::fv0
+} // namespace o2::fdd
 #endif
