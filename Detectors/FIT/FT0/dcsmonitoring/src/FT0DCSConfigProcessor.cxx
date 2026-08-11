@@ -19,11 +19,11 @@ void FT0DCSConfigProcessor::run(o2::framework::ProcessingContext& pc)
     gsl::span<const char> dataBuffer = pc.inputs().get<gsl::span<char>>("inputConfig");
     std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
     LOG(info) << "Got input file " << configFileName << " of size " << dataBuffer.size();
-
+    LOG(info) << "FEE filename: " << mFeeConfigurationReader.getFilename();
+    LOG(info) << "HV filename: " << mHvConfigurationReader.getFilename();
     if (!configFileName.compare(mDeadChannelMapReader->getFileNameDChM())) {
       handleDeadChannelMapUpdate(pc, dataTime, dataBuffer);
-    }
-    if (mFeeConfigurationReader.matchFilename(configFileName)) {
+    } else if (mFeeConfigurationReader.matchFilename(configFileName)) {
       Ft0FeeConfiguration feeConfiguration = mFeeConfigurationReader.parseFeeConfiguration(dataBuffer);
       o2::ccdb::CcdbObjectInfo objectInfo = mFeeConfigCcdbInfo.createObjectInfo(feeConfiguration, dataTime, {});
       sendObject(pc.outputs(), feeConfiguration, objectInfo, getFeeConfigDescription());

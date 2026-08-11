@@ -57,7 +57,7 @@ const std::string FITHvConfigurationReader::configurationSchema = R"json(
 {
     "type": "object",
     "properties": {
-        "channels": {
+        "hv_channels": {
         "type": "object",
         "properties": {
                 "gain" : {
@@ -70,7 +70,7 @@ const std::string FITHvConfigurationReader::configurationSchema = R"json(
         "required": ["gain"]
     },
     "additionalProperties": false,
-    "required": ["channels"]
+    "required": ["hv_channels"]
 }
 )json";
 } // namespace o2::fit

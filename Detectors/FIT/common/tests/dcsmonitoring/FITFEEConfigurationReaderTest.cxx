@@ -15,15 +15,17 @@
 
 #include <boost/test/unit_test.hpp>
 #include <rapidjson/document.h>
-#include "FITDCSMonitoring/FITFEEConfigurationReader.h"
+
 #include "DataFormatsFIT/Configuration.h"
+#include "FITDCSMonitoring/FITFEEConfigurationReader.h"
 
 using namespace o2::fit;
 
 BOOST_AUTO_TEST_SUITE(o2_fit_dcs_monitoring)
+
 // Dummy structure for trigger data for complete definition of FEE configuration structure
 struct SimpleTriggers {
-    int32_t triggerA;
+  int32_t triggerA;
 };
 
 // Test configuration structure
@@ -36,169 +38,215 @@ struct SimpleConfiguration {
   o2::fit::PmConfig pmC[2];
 };
 
-class SimpleFITFEEConfigurationReader: public FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>{
-public:
-    // Dummy method to parse dummy triggers payload
-    SimpleTriggers parseTriggers(const rapidjson::Value& node, const char* childName, SimpleTriggers& triggers) {
-        triggers.triggerA = 32;
-    }
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseFeeConfiguration;
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseJsonArray;
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseChannelData;
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseTcmConfig;
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parsePmConfig;
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parsePmsArray;
-    using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::validateSchema;
+rapidjson::Document createEmptyPayload()
+{
+  rapidjson::Document doc;
+  doc.SetObject();
+  return doc;
+}
+
+rapidjson::Document createDocumentFromString(const char* data)
+{
+  rapidjson::Document doc;
+  doc.Parse(data);
+  return doc;
+}
+
+rapidjson::Document createPmConfigNode(uint8_t orGateValue)
+{
+  auto doc = createEmptyPayload();
+  auto& allocator = doc.GetAllocator();
+  doc.AddMember("or_gate", orGateValue, allocator);
+  return doc;
+}
+
+void addTcmConfigNode(rapidjson::Document& doc,
+                      const char* nodeName,
+                      float phaseDelayA,
+                      float phaseDelayC)
+{
+  auto& allocator = doc.GetAllocator();
+
+  rapidjson::Value tcmConfigJson(rapidjson::kObjectType);
+  tcmConfigJson.AddMember("phase_delay_a", phaseDelayA, allocator);
+  tcmConfigJson.AddMember("phase_delay_c", phaseDelayC, allocator);
+
+  doc.AddMember(rapidjson::StringRef(nodeName), tcmConfigJson, allocator);
+}
+
+template <size_t NChannels>
+void addPmConfigsNode(rapidjson::Document& doc, const char* nodeName, const uint8_t (&orGateValues)[NChannels])
+{
+  auto& allocator = doc.GetAllocator();
+
+  rapidjson::Value pmJson(rapidjson::kArrayType);
+
+  for (size_t idx = 0; idx < NChannels; ++idx) {
+    rapidjson::Value pm(rapidjson::kObjectType);
+    pm.AddMember("or_gate", orGateValues[idx], allocator);
+    pmJson.PushBack(pm, allocator);
+  }
+
+  doc.AddMember(rapidjson::StringRef(nodeName), pmJson, allocator);
+}
+
+template <typename T, size_t N>
+void addArrayMember(rapidjson::Value& node, const char* memberName, const T (&values)[N], rapidjson::Document::AllocatorType& allocator)
+{
+  rapidjson::Value arrayJson(rapidjson::kArrayType);
+
+  for (size_t idx = 0; idx < N; ++idx) {
+    arrayJson.PushBack(values[idx], allocator);
+  }
+
+  node.AddMember(rapidjson::StringRef(memberName), arrayJson, allocator);
+}
+
+template <size_t NChannels>
+void addChannelsConfigNode(rapidjson::Document& doc,
+                           const char* nodeName,
+                           const float (&timeAligments)[NChannels],
+                           const uint16_t (&cfdThresholds)[NChannels],
+                           const int16_t (&cfdZeros)[NChannels],
+                           const int16_t (&adcZeros)[NChannels],
+                           const uint16_t (&adcDelays)[NChannels],
+                           const bool (&channelMaskData)[NChannels],
+                           const bool (&channelMaskTriggers)[NChannels])
+{
+  auto& allocator = doc.GetAllocator();
+
+  rapidjson::Value channelsJson(rapidjson::kObjectType);
+
+  addArrayMember(channelsJson, "time_aligments", timeAligments, allocator);
+  addArrayMember(channelsJson, "cfd_thresholds", cfdThresholds, allocator);
+  addArrayMember(channelsJson, "cfd_zeros", cfdZeros, allocator);
+  addArrayMember(channelsJson, "adc_zeros", adcZeros, allocator);
+  addArrayMember(channelsJson, "adc_delays", adcDelays, allocator);
+  addArrayMember(channelsJson, "channel_mask_data", channelMaskData, allocator);
+  addArrayMember(channelsJson, "channel_mask_triggers", channelMaskTriggers, allocator);
+
+  doc.AddMember(rapidjson::StringRef(nodeName), channelsJson, allocator);
+}
+
+class SimpleFITFEEConfigurationReader
+  : public FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>
+{
+ public:
+  // Dummy method to parse dummy triggers payload
+  SimpleTriggers parseTriggers(const rapidjson::Value&,
+                               const char*,
+                               SimpleTriggers& triggers)
+  {
+    triggers.triggerA = 32;
+    return triggers;
+  }
+
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseFeeConfiguration;
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseJsonArray;
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseChannelData;
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parseTcmConfig;
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parsePmConfig;
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::parsePmsArray;
+  using FITFEEConfigurationReader<SimpleFITFEEConfigurationReader>::validateSchema;
 };
 
 BOOST_AUTO_TEST_CASE(shouldParseSinglePmConfig)
 {
-    const uint8_t orGateValue = 20;
-    rapidjson::Document doc;
-    doc.SetObject();
-    auto& allocator = doc.GetAllocator();
+  const uint8_t orGateValue = 20;
 
-    doc.AddMember("or_gate", orGateValue, allocator);
-    SimpleFITFEEConfigurationReader reader;
+  rapidjson::Document doc = createPmConfigNode(orGateValue);
 
-    PmConfig pmConfig;
-    reader.parsePmConfig(doc, pmConfig);
+  PmConfig pmConfig;
+  SimpleFITFEEConfigurationReader reader;
+  reader.parsePmConfig(doc, pmConfig);
 
-    BOOST_CHECK(pmConfig.orGate == orGateValue);
+  BOOST_CHECK_EQUAL(pmConfig.orGate, orGateValue);
 }
 
-BOOST_AUTO_TEST_CASE(shouldParseTcmConfig) {
-    const float phaseDelayAValue = 1.2;
-    const float phaseDelayCValue = -1.3;
+BOOST_AUTO_TEST_CASE(shouldParseTcmConfig)
+{
+  const float phaseDelayAValue = 1.2f;
+  const float phaseDelayCValue = -1.3f;
 
-    rapidjson::Document doc;
-    doc.SetObject();
-    auto& allocator = doc.GetAllocator();
-    
-    rapidjson::Value tcmConfigJson(rapidjson::kObjectType);
-    tcmConfigJson.AddMember("phase_delay_a", phaseDelayAValue, allocator);
-    tcmConfigJson.AddMember("phase_delay_c", phaseDelayCValue, allocator);
+  rapidjson::Document doc = createEmptyPayload();
+  addTcmConfigNode(doc, "tcm_config", phaseDelayAValue, phaseDelayCValue);
 
-    doc.AddMember("tcm_config", tcmConfigJson, allocator);
-    TcmConfig tcmConfig;
+  TcmConfig tcmConfig;
 
-    SimpleFITFEEConfigurationReader reader;
-    reader.parseTcmConfig(doc, "tcm_config", tcmConfig);
+  SimpleFITFEEConfigurationReader reader;
+  reader.parseTcmConfig(doc, "tcm_config", tcmConfig);
 
-    TcmConfig expectedConfig = {.phaseDelayA = phaseDelayAValue, .phaseDelayC = phaseDelayCValue};
-    BOOST_CHECK(tcmConfig == expectedConfig);
+  TcmConfig expectedConfig = {
+    .phaseDelayA = phaseDelayAValue,
+    .phaseDelayC = phaseDelayCValue
+    };
+
+  BOOST_CHECK(tcmConfig == expectedConfig);
 }
 
-BOOST_AUTO_TEST_CASE(shouldParseArrayOfPmConfigs) {
-    uint8_t pmAOrGate[2] = {3, 4};
-    uint8_t pmCOrGate[2] = {5, 6};
+BOOST_AUTO_TEST_CASE(shouldParseArrayOfPmConfigs)
+{
+  const uint8_t pmAOrGate[] = {3, 4};
+  const uint8_t pmCOrGate[] = {5, 6};
 
-    rapidjson::Document doc;
-    doc.SetObject();
-    auto& allocator = doc.GetAllocator();
+  rapidjson::Document doc = createEmptyPayload();
+  addPmConfigsNode(doc, "pm_a", pmAOrGate);
+  addPmConfigsNode(doc, "pm_c", pmCOrGate);
 
-    rapidjson::Value pmAJson(rapidjson::kArrayType);
-    rapidjson::Value pmCJson(rapidjson::kArrayType);
+  PmConfig pmAParsed[2];
+  PmConfig pmCParsed[2];
 
-    for(int idx = 0; idx < sizeof(pmAOrGate); idx++) {
-        rapidjson::Value pm(rapidjson::kObjectType);
-        pm.AddMember("or_gate", pmAOrGate[idx], allocator);
-        pmAJson.PushBack(pm, allocator);
-    }
+  SimpleFITFEEConfigurationReader reader;
+  reader.parsePmsArray(doc, "pm_a", pmAParsed);
+  reader.parsePmsArray(doc, "pm_c", pmCParsed);
 
-    for(int idx = 0; idx < sizeof(pmCOrGate); idx++) {
-        rapidjson::Value pm(rapidjson::kObjectType);
-        pm.AddMember("or_gate", pmCOrGate[idx], allocator);
-        pmCJson.PushBack(pm, allocator);
-    }
+  for (size_t idx = 0; idx < std::size(pmAParsed); ++idx) {
+    BOOST_CHECK_EQUAL(pmAParsed[idx].orGate, pmAOrGate[idx]);
+  }
 
-    doc.AddMember("pm_a", pmAJson, allocator);
-    doc.AddMember("pm_c", pmCJson, allocator);
-
-    PmConfig pmAParsed[2];
-    PmConfig pmCParsed[2];
-
-    SimpleFITFEEConfigurationReader reader;
-    reader.parsePmsArray(doc, "pm_a", pmAParsed);
-    reader.parsePmsArray(doc, "pm_c", pmCParsed);
-
-    for(int idx= 0; idx < sizeof(pmAParsed); idx++) {
-        BOOST_CHECK(pmAParsed[idx].orGate == pmAOrGate[idx]);
-    }
-
-    for(int idx= 0; idx < sizeof(pmAParsed); idx++) {
-        BOOST_CHECK(pmCParsed[idx].orGate == pmCOrGate[idx]);
-    }
+  for (size_t idx = 0; idx < std::size(pmCParsed); ++idx) {
+    BOOST_CHECK_EQUAL(pmCParsed[idx].orGate, pmCOrGate[idx]);
+  }
 }
 
-BOOST_AUTO_TEST_CASE(shouldThrowOnInconsistentPmsArraySize) {
-    uint8_t pmAOrGate[2] = {0};
+BOOST_AUTO_TEST_CASE(shouldThrowOnInconsistentPmsArraySize)
+{
+  const uint8_t pmAOrGate[] = {0, 0};
 
-    rapidjson::Document doc;
-    doc.SetObject();
-    auto& allocator = doc.GetAllocator();
+  rapidjson::Document doc = createEmptyPayload();
+  addPmConfigsNode(doc, "pm_a", pmAOrGate);
 
-    rapidjson::Value pmAJson(rapidjson::kArrayType);
+  PmConfig pmAParsed[3];
 
-    for(int idx = 0; idx < sizeof(pmAOrGate); idx++) {
-        rapidjson::Value pm(rapidjson::kObjectType);
-        pm.AddMember("or_gate", pmAOrGate[0], allocator);
-        pmAJson.PushBack(pm, allocator);
-    }
+  SimpleFITFEEConfigurationReader reader;
 
-    doc.AddMember("pm_a", pmAJson, allocator);
-
-    PmConfig pmAParsed[3];
-
-    SimpleFITFEEConfigurationReader reader;
-    BOOST_CHECK_THROW(reader.parsePmsArray(doc, "pm_a", pmAParsed), std::runtime_error);
+  BOOST_CHECK_THROW(reader.parsePmsArray(doc, "pm_a", pmAParsed), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(shouldParseChannelsConfig)
 {
   constexpr size_t NTestChannels = 4;
 
-  float timeAligments[NTestChannels] = {1.1f, 2.2f, 3.3f, 4.4f};
-  uint16_t cfdThresholds[NTestChannels] = {10, 20, 30, 40};
-  int16_t cfdZeros[NTestChannels] = {-1, -2, -3, -4};
-  int16_t adcZeros[NTestChannels] = {100, 200, 300, 400};
-  uint16_t adcDelays[NTestChannels] = {5, 6, 7, 8};
-  bool channelMaskData[NTestChannels] = {true, false, true, false};
-  bool channelMaskTriggers[NTestChannels] = {false, true, false, true};
+  const float timeAligments[NTestChannels] = {1.1f, 2.2f, 3.3f, 4.4f};
+  const uint16_t cfdThresholds[NTestChannels] = {10, 20, 30, 40};
+  const int16_t cfdZeros[NTestChannels] = {-1, -2, -3, -4};
+  const int16_t adcZeros[NTestChannels] = { 100, 200, 300, 400};
+  const uint16_t adcDelays[NTestChannels] = {5, 6, 7, 8};
+  const bool channelMaskData[NTestChannels] = {true, false, true, false};
+  const bool channelMaskTriggers[NTestChannels] = {false, true, false, true};
 
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
+  rapidjson::Document doc = createEmptyPayload();
 
-  rapidjson::Value channels(rapidjson::kObjectType);
-
-  rapidjson::Value timeAligmentsJson(rapidjson::kArrayType);
-  rapidjson::Value cfdThresholdsJson(rapidjson::kArrayType);
-  rapidjson::Value cfdZerosJson(rapidjson::kArrayType);
-  rapidjson::Value adcZerosJson(rapidjson::kArrayType);
-  rapidjson::Value adcDelaysJson(rapidjson::kArrayType);
-  rapidjson::Value channelMaskDataJson(rapidjson::kArrayType);
-  rapidjson::Value channelMaskTriggersJson(rapidjson::kArrayType);
-
-  for (size_t idx = 0; idx < NTestChannels; ++idx) {
-    timeAligmentsJson.PushBack(timeAligments[idx], allocator);
-    cfdThresholdsJson.PushBack(cfdThresholds[idx], allocator);
-    cfdZerosJson.PushBack(cfdZeros[idx], allocator);
-    adcZerosJson.PushBack(adcZeros[idx], allocator);
-    adcDelaysJson.PushBack(adcDelays[idx], allocator);
-    channelMaskDataJson.PushBack(channelMaskData[idx], allocator);
-    channelMaskTriggersJson.PushBack(channelMaskTriggers[idx], allocator);
-  }
-
-  channels.AddMember("time_aligments", timeAligmentsJson, allocator);
-  channels.AddMember("cfd_thresholds", cfdThresholdsJson, allocator);
-  channels.AddMember("cfd_zeros", cfdZerosJson, allocator);
-  channels.AddMember("adc_zeros", adcZerosJson, allocator);
-  channels.AddMember("adc_delays", adcDelaysJson, allocator);
-  channels.AddMember("channel_mask_data", channelMaskDataJson, allocator);
-  channels.AddMember("channel_mask_triggers", channelMaskTriggersJson, allocator);
-
-  doc.AddMember("channels", channels, allocator);
+  addChannelsConfigNode(
+    doc,
+    "channels",
+    timeAligments,
+    cfdThresholds,
+    cfdZeros,
+    adcZeros,
+    adcDelays,
+    channelMaskData,
+    channelMaskTriggers);
 
   ChannelsConfig<NTestChannels> parsed{};
 
@@ -212,44 +260,47 @@ BOOST_AUTO_TEST_CASE(shouldParseChannelsConfig)
     BOOST_CHECK_EQUAL(parsed.adcZeros[idx], adcZeros[idx]);
     BOOST_CHECK_EQUAL(parsed.adcDelays[idx], adcDelays[idx]);
     BOOST_CHECK_EQUAL(parsed.channelMaskData[idx], channelMaskData[idx]);
-    BOOST_CHECK_EQUAL(parsed.channelMaskTriggers[idx],
-                      channelMaskTriggers[idx]);
+    BOOST_CHECK_EQUAL(parsed.channelMaskTriggers[idx], channelMaskTriggers[idx]);
   }
 }
 
-BOOST_AUTO_TEST_CASE(shouldAcceptValidFeeConfigurationPayload) {
-    rapidjson::Document doc;
-    doc.Parse(R"json(
-    {
-        "channels" : {
-            "time_aligments": [1,2,3,4],
-            "cfd_thresholds": [10,20,30,40],
-            "cfd_zeros": [11,22,33,44],
-            "adc_zeros": [21,22,23,24],
-            "adc_delays": [31,32,33,34],
-            "channel_mask_data": [true, false, true, false],
-            "channel_mask_triggers": [true, true, false, false]
-        },
-        "pm_a": [
-            {"or_gate": 1.21},
-            {"or_gate": 1.22}
-        ],
-        "pm_c": [
-            {"or_gate": 0.1},
-            {"or_gate": 0.2}
-        ],
-        "tcm": {
-            "phase_delay_a": 3.3,
-            "phase_delay_c": 4.4
-        },
-        "triggers": {
-            "trigger_a": 123
-        }
+BOOST_AUTO_TEST_CASE(shouldAcceptValidFeeConfigurationPayload)
+{
+  const char* jsonPayload = R"json(
+  {
+    "channels": {
+      "time_aligments": [1, 2, 3, 4],
+      "cfd_thresholds": [10, 20, 30, 40],
+      "cfd_zeros": [11, 22, 33, 44],
+      "adc_zeros": [21, 22, 23, 24],
+      "adc_delays": [31, 32, 33, 34],
+      "channel_mask_data": [true, false, true, false],
+      "channel_mask_triggers": [true, true, false, false]
+    },
+    "pm_a": [
+      {"or_gate": 1.21},
+      {"or_gate": 1.22}
+    ],
+    "pm_c": [
+      {"or_gate": 0.1},
+      {"or_gate": 0.2}
+    ],
+    "tcm": {
+      "phase_delay_a": 3.3,
+      "phase_delay_c": 4.4
+    },
+    "triggers": {
+      "trigger_a": 123
     }
-    )json");
+  }
+  )json";
 
-    SimpleFITFEEConfigurationReader reader;
-    std::string errorMessage;
-    BOOST_CHECK_MESSAGE(reader.validateSchema(doc, errorMessage), errorMessage);
+  rapidjson::Document doc = createDocumentFromString(jsonPayload);
+
+  SimpleFITFEEConfigurationReader reader;
+  std::string errorMessage;
+
+  BOOST_CHECK_MESSAGE(reader.validateSchema(doc, errorMessage), errorMessage);
 }
+
 BOOST_AUTO_TEST_SUITE_END()

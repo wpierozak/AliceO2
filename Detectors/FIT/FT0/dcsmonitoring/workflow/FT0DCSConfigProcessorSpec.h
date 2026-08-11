@@ -53,7 +53,11 @@ DataProcessorSpec getFT0DCSConfigProcessorSpec()
             {"valid-days-dchm", VariantType::UInt32, 180u, {"Dead channel map validity in days"}},
             {"no-validate", VariantType::Bool, false, {"Don't validate the CCDB uploads"}},
             {"filename-fee-config", VariantType::String, "ft0-fee-config.json", {"FEE configuration file name"}},
-            {"valid-days-fee-config", VariantType::UInt32, 180u, {"FEE configuration validity in days"}}}};
+            {"valid-days-fee-config", VariantType::UInt32, 180u, {"FEE configuration validity in days"}},
+            {"filename-hv-config", VariantType::String, "ft0-hv-config.json", {"HV configuration file name"}},
+            {"valid-days-hv-config", VariantType::UInt32, 180u, {"HV configuration validity in days"}}
+          }
+    };
 }
 
 } // namespace o2::framework
