@@ -9,21 +9,26 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-#ifndef O2_FT0_DCSCONFIGREADER_H
-#define O2_FT0_DCSCONFIGREADER_H
+/// \file FT0DCSConfigReader.h
+/// \brief DCS configuration reader for FT0
+///
+/// \author Andreas Molander <andreas.molander@cern.ch>, University of Jyvaskyla, Finland
+
+#ifndef O2_FV0_DCSCONFIGREADER_H
+#define O2_FV0_DCSCONFIGREADER_H
 
 #include "FITDCSMonitoring/FITFEEConfigurationReader.h"
-#include "DataFormatsFT0/FeeConfiguration.h"
+#include "DataFormatsFV0/FeeConfiguration.h"
 
-namespace o2::ft0
+namespace o2::fv0
 {
-class FT0FEEConfigurationReader : public o2::fit::FITFEEConfigurationReader<FT0FEEConfigurationReader>
+class FV0FEEConfigurationReader : public o2::fit::FITFEEConfigurationReader<FV0FEEConfigurationReader>
 {
  public:
-  Ft0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
+  Fv0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
   void parseTriggers(const rapidjson::Value& root, const char* triggersNodeName, TriggersConfig& config);
 };
 
-} // namespace o2::ft0
+} // namespace o2::fv0
 
-#endif // O2_FT0_DCSCONFIGREADER_H
+#endif // O2_FV0_DCSCONFIGREADER_H

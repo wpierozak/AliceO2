@@ -14,18 +14,24 @@
 #ifndef O2_FV0_DCS_CONFIG_PROCESSOR_H
 #define O2_FV0_DCS_CONFIG_PROCESSOR_H
 #include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
+#include "FV0DCSMonitoring/FV0FEEConfigurationReader.h"
+#include "FITDCSMonitoring/FITHvConfigurationReader.h"
 
 namespace o2::fv0
 {
 class FV0DCSConfigProcessor : public o2::fit::FITDCSConfigProcessor
 {
  public:
-  FV0DCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
-    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM, {}, {}) {}
+  FV0DCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM, const o2::header::DataDescription& dataDescriptionFeeConfig, const o2::header::DataDescription& dataDescriptionHvConfig)
+    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM, dataDescriptionFeeConfig, dataDescriptionHvConfig) {}
 
   void init(o2::framework::InitContext& ic) final;
   void run(o2::framework::ProcessingContext& pc) final;
   void endOfStream(o2::framework::EndOfStreamContext& ec) final;
+
+ private:
+  FV0FEEConfigurationReader mFeeConfigurationReader;
+  o2::fit::FITHvConfigurationReader mHvConfigurationReader;
 };
 } // namespace o2::fv0
 #endif

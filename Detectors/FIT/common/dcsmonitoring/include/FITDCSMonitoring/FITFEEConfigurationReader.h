@@ -38,8 +38,12 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 
     parseChannelData(document, "channels", configuration.channels);
     parseTcmConfig(document, "tcm", configuration.tcm);
-    parsePmsArray(document, "pm_a", configuration.pmA);
-    parsePmsArray(document, "pm_c", configuration.pmC);
+    if constexpr (requires { configuration.pmA; }) {
+      parsePmsArray(document, "pm_a", configuration.pmA);
+    }
+    if constexpr (requires { configuration.pmC; }) {
+      parsePmsArray(document, "pm_c", configuration.pmC);
+    }
     static_cast<ConfigurationReaderType*>(this)->parseTriggers(document, "triggers", configuration.triggers);
 
     return configuration;
@@ -102,13 +106,7 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 
   void parseTcmConfig(const rapidjson::Value& root, const char* tcmNodeName, TcmConfig& tcmConfig)
   {
-    if (!root.HasMember(tcmNodeName)) {
-      std::runtime_error(std::format("Cannot find {}", tcmNodeName));
-    }
     const auto& tcmNode = root[tcmNodeName];
-    if (!tcmNode.HasMember("phase_delay_a") || !tcmNode.HasMember("phase_delay_c")) {
-      throw std::runtime_error("Invalid TCM configuration node!");
-    }
     const auto& phaseDelayANode = tcmNode["phase_delay_a"];
     const auto& phaseDelayCNode = tcmNode["phase_delay_c"];
     tcmConfig.phaseDelayA = phaseDelayANode.GetDouble();
@@ -117,9 +115,6 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 
   void parsePmConfig(const rapidjson::Value& pmNode, PmConfig& pmConfig)
   {
-    if (!pmNode.HasMember("or_gate")) {
-      throw std::runtime_error("Invalid PM configuration node");
-    }
     const auto& orGateNode = pmNode["or_gate"];
     pmConfig.orGate = orGateNode.GetUint();
   }
@@ -131,17 +126,14 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
       throw std::runtime_error(std::format("Failed to find {} node", pmArrayNodeName));
     }
     const auto& pmArrayNode = root[pmArrayNodeName];
-    if (pmArrayNode.IsArray() == false) {
-      std::runtime_error(std::format("{} node is not an array!", pmArrayNodeName));
-    }
     const auto& pmArray = pmArrayNode.GetArray();
     if (pmArray.Size() != Size) {
       throw std::runtime_error(std::format("Received data for {} PMs, but expected {}", pmArray.Size(), Size));
     }
     for (int idx = 0; idx < pmArray.Size(); idx++) {
       const auto& pm = pmArray[idx];
-      if (pm.IsObject() == false) {
-        throw std::runtime_error("Encountered non-object element in PM array");
+      if (pm.IsNull()) {
+        continue;
       }
       parsePmConfig(pm, pmConfig[idx]);
     }
@@ -185,18 +177,22 @@ const std::string FITFEEConfigurationReader<ConfigurationReaderType>::configurat
             "pm_a":{
                 "type": "array",
                 "items": {
-                  "type": "object",
+                  "type": ["object", "null"],
                   "properties": {
-                    "or_gate": {"type": "number"}
+                    "or_gate": {"type": "number"},
+                    "trg_charge_low_level": {"type": "number"},
+                    "trg_charge_high_level": {"type": "number"}
                   }
                 }
             },
             "pm_c": {
                 "type": "array",
                 "items": {
-                  "type": "object",
+                  "type": ["object", "null"],
                   "properties": {
-                    "or_gate": {"type": "number"}
+                    "or_gate": {"type": "number"},
+                    "trg_charge_low_level": {"type": "number"},
+                    "trg_charge_high_level": {"type": "number"}
                   }
                 }
             },

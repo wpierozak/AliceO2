@@ -178,8 +178,7 @@ BOOST_AUTO_TEST_CASE(shouldParseTcmConfig)
 
   TcmConfig expectedConfig = {
     .phaseDelayA = phaseDelayAValue,
-    .phaseDelayC = phaseDelayCValue
-    };
+    .phaseDelayC = phaseDelayCValue};
 
   BOOST_CHECK(tcmConfig == expectedConfig);
 }
@@ -230,7 +229,7 @@ BOOST_AUTO_TEST_CASE(shouldParseChannelsConfig)
   const float timeAligments[NTestChannels] = {1.1f, 2.2f, 3.3f, 4.4f};
   const uint16_t cfdThresholds[NTestChannels] = {10, 20, 30, 40};
   const int16_t cfdZeros[NTestChannels] = {-1, -2, -3, -4};
-  const int16_t adcZeros[NTestChannels] = { 100, 200, 300, 400};
+  const int16_t adcZeros[NTestChannels] = {100, 200, 300, 400};
   const uint16_t adcDelays[NTestChannels] = {5, 6, 7, 8};
   const bool channelMaskData[NTestChannels] = {true, false, true, false};
   const bool channelMaskTriggers[NTestChannels] = {false, true, false, true};
@@ -301,6 +300,159 @@ BOOST_AUTO_TEST_CASE(shouldAcceptValidFeeConfigurationPayload)
   std::string errorMessage;
 
   BOOST_CHECK_MESSAGE(reader.validateSchema(doc, errorMessage), errorMessage);
+}
+
+BOOST_AUTO_TEST_CASE(shouldAcceptValidFeeConfigurationPayloadWithNullPmData)
+{
+  const char* jsonPayload = R"json(
+  {
+    "channels": {
+      "time_aligments": [1, 2, 3, 4],
+      "cfd_thresholds": [10, 20, 30, 40],
+      "cfd_zeros": [11, 22, 33, 44],
+      "adc_zeros": [21, 22, 23, 24],
+      "adc_delays": [31, 32, 33, 34],
+      "channel_mask_data": [true, false, true, false],
+      "channel_mask_triggers": [true, true, false, false]
+    },
+    "pm_a": [
+      {"or_gate": 1.21},
+      null,
+      {"or_gate": 1.22}
+    ],
+    "pm_c": [
+      null,
+      {"or_gate": 0.1},
+      {"or_gate": 0.2},
+      null,
+      null
+    ],
+    "tcm": {
+      "phase_delay_a": 3.3,
+      "phase_delay_c": 4.4
+    },
+    "triggers": {
+      "trigger_a": 123
+    }
+  }
+  )json";
+
+  rapidjson::Document doc = createDocumentFromString(jsonPayload);
+
+  SimpleFITFEEConfigurationReader reader;
+  std::string errorMessage;
+
+  BOOST_CHECK_MESSAGE(reader.validateSchema(doc, errorMessage), errorMessage);
+}
+
+BOOST_AUTO_TEST_CASE(shouldDetectInvalidPayload)
+{
+  SimpleFITFEEConfigurationReader reader;
+  std::string errorMessage;
+
+  const char* missingChannelData = R"json(
+  {
+    "channels": {
+      "time_aligments": [1, 2, 3, 4],
+      "cfd_thresholds": [10, 20, 40],
+      "cfd_zeros": [11, 22, 33, 44],
+      "adc_zeros": [21, 22, 23],
+      "adc_delays": [31, 32, 33, 34],
+      "channel_mask_data": [true, false, true, false],
+      "channel_mask_triggers": [true, true, false, false]
+    },
+    "pm_a": [
+      {"or_gate": 1.21},
+      null,
+      {"or_gate": 1.22}
+    ],
+    "pm_c": [
+      null,
+      {"or_gate": 0.1},
+      {"or_gate": 0.2},
+      null,
+      null
+    ],
+    "tcm": {
+      "phase_delay_a": 3.3,
+      "phase_delay_c": 4.4
+    },
+    "triggers": {
+      "trigger_a": 123
+    }
+  }
+  )json";
+
+  rapidjson::Document doc = createDocumentFromString(missingChannelData);
+  BOOST_CHECK(reader.validateSchema(doc, errorMessage) == false);
+
+  const char* invalidPmConfig = R"json(
+  {
+    "channels": {
+      "time_aligments": [1, 2, 3, 5, 4],
+      "cfd_thresholds": [10, 20, 30, 40],
+      "cfd_zeros": [11, 22, 33, 44],
+      "adc_zeros": [21, 22, 23, 24],
+      "adc_delays": [31, 32, 33, 34],
+      "channel_mask_data": [true, false, true, false],
+      "channel_mask_triggers": [true, true, false, false]
+    },
+    "pm_a": [
+      {"or_gate": 1.21},
+      null,
+      {"o_gate": 1.22}
+    ],
+    "pm_c": [
+      {"gate": 0.2},
+    ],
+    "tcm": {
+      "phase_delay_a": 3.3,
+      "phase_delay_c": 4.4
+    },
+    "triggers": {
+      "trigger_a": 123
+    }
+  }
+  )json";
+
+  doc = createDocumentFromString(missingChannelData);
+  BOOST_CHECK(reader.validateSchema(doc, errorMessage) == false);
+
+  const char* invalidTcmConfig = R"json(
+  {
+    "channels": {
+      "time_aligments": [1, 2, 3, 4],
+      "cfd_thresholds": [10, 20, 30, 40],
+      "cfd_zeros": [11, 22, 33, 44],
+      "adc_zeros": [21, 22, 23, 24],
+      "adc_delays": [31, 32, 33, 34],
+      "channel_mask_data": [true, false, true, false],
+      "channel_mask_triggers": [true, true, false, false]
+    },
+    "pm_a": [
+      {"or_gate": 1.21},
+      null,
+      {"or_gate": 1.22}
+    ],
+    "pm_c": [
+      null,
+      {"or_gate": 0.1},
+      {"or_gate": 0.2},
+      null,
+      null
+    ],
+    "tcm": {
+      "phase_a": 3.3,
+      "phase_delay_c": 4.4
+    },
+    "triggers": {
+      "trigger_a": 123
+    }
+  }
+  )json";
+
+  doc = createDocumentFromString(missingChannelData);
+  BOOST_CHECK(reader.validateSchema(doc, errorMessage) == false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

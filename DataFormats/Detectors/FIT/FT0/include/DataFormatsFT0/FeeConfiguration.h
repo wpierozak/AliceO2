@@ -30,7 +30,7 @@ struct TriggersConfig {
 };
 
 struct Ft0FeeConfiguration {
-  static constexpr int NChannels = 212;
+  static constexpr int NChannels = 208;
   TriggersConfig triggers;
   o2::fit::ChannelsConfig<NChannels> channels;
   o2::fit::TcmConfig tcm;

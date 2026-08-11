@@ -62,7 +62,8 @@ struct TcmConfig {
 
 struct PmConfig {
   uint8_t orGate{config_helpers::DefaultValue};
-  // charge thershold
+  uint16_t trgChargeHighLevel{config_helpers::DefaultValue};
+  uint16_t trgChargeLowLevel{config_helpers::DefaultValue};
   bool operator==(const PmConfig&) const = default;
   ClassDefNV(PmConfig, 1);
 };

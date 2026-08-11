@@ -10,8 +10,8 @@
 # or submit itself to any jurisdiction.
 
 o2_add_library(FV0DCSMonitoring
-               SOURCES src/FV0DCSDataProcessor.cxx src/FV0DCSConfigProcessor.cxx
-               PUBLIC_LINK_LIBRARIES O2::FITDCSMonitoring)
+               SOURCES src/FV0DCSDataProcessor.cxx src/FV0DCSConfigProcessor.cxx src/FV0FEEConfigurationReader.cxx
+               PUBLIC_LINK_LIBRARIES O2::FITDCSMonitoring O2::DataFormatsFV0)
 
 o2_add_executable(dcs-sim-workflow
                   COMPONENT_NAME fv0
