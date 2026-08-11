@@ -122,5 +122,17 @@ struct ChannelsConfig {
 
   ClassDefNV(ChannelsConfig<NChannels>, 1);
 };
+
+template <std::size_t NChannels>
+struct HvChannelsConfig {
+  float gain[NChannels];
+
+  constexpr HvChannelsConfig()
+  {
+    config_helpers::fillDefaultArray(gain);
+  }
+
+  ClassDefNV(HvChannelsConfig<NChannels>, 1);
+};
 } // namespace o2::fit
 #endif

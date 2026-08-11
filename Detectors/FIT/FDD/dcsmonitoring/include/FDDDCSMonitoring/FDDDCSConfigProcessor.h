@@ -16,16 +16,17 @@
 
 #include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
 
-namespace o2::fdd {
+namespace o2::fdd
+{
 class FDDDCSConfigProcessor : public o2::fit::FITDCSConfigProcessor
 {
  public:
   FDDDCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
-    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM) {}
+    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM, {}, {}) {}
 
   void init(o2::framework::InitContext& ic) final;
   void run(o2::framework::ProcessingContext& pc) final;
   void endOfStream(o2::framework::EndOfStreamContext& ec) final;
 };
-}
+} // namespace o2::fdd
 #endif

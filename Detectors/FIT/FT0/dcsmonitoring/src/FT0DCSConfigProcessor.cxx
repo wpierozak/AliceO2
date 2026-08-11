@@ -1,4 +1,5 @@
 #include "FT0DCSMonitoring/FT0DCSConfigProcessor.h"
+#include "DataFormatsFT0/HvConfiguration.h"
 
 namespace o2::ft0
 {
@@ -7,6 +8,7 @@ void FT0DCSConfigProcessor::init(o2::framework::InitContext& ic)
   initDeadChannelMapReader();
   setupDeadChannelMapReader(ic);
   setupFeeConfigurationReader(ic, mFeeConfigurationReader);
+  setupHvConfigurationReader(ic, mHvConfigurationReader);
 }
 
 void FT0DCSConfigProcessor::run(o2::framework::ProcessingContext& pc)
@@ -23,8 +25,12 @@ void FT0DCSConfigProcessor::run(o2::framework::ProcessingContext& pc)
     }
     if (mFeeConfigurationReader.matchFilename(configFileName)) {
       Ft0FeeConfiguration feeConfiguration = mFeeConfigurationReader.parseFeeConfiguration(dataBuffer);
-      o2::ccdb::CcdbObjectInfo objectInfo = mFeeConfigurationReader.createObjectInfo(feeConfiguration, dataTime, {});
-      sendObject(pc.outputs(), feeConfiguration, objectInfo, mFeeConfigurationReader.getDataDescriptor());
+      o2::ccdb::CcdbObjectInfo objectInfo = mFeeConfigCcdbInfo.createObjectInfo(feeConfiguration, dataTime, {});
+      sendObject(pc.outputs(), feeConfiguration, objectInfo, getFeeConfigDescription());
+    } else if (mHvConfigurationReader.matchFilename(configFileName)) {
+      Ft0HvConfiguration hvConfig = mHvConfigurationReader.parseHvConfiguration<Ft0HvConfiguration>(dataBuffer);
+      o2::ccdb::CcdbObjectInfo objectInfo = mHvConfigCcdbInfo.createObjectInfo(hvConfig, dataTime, {});
+      sendObject(pc.outputs(), hvConfig, objectInfo, getHvConfigDescription());
     } else {
       LOG(error) << "Unknown input file: " << configFileName;
     }

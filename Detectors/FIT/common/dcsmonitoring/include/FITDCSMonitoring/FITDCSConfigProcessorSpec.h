@@ -21,6 +21,9 @@
 #include "DetectorsCalibration/Utils.h"
 #include "FITDCSMonitoring/FITDeadChannelMapReader.h"
 #include "FITDCSMonitoring/FITFEEConfigurationReader.h"
+#include "FITDCSMonitoring/FITHvConfigurationReader.h"
+#include "FITDCSMonitoring/DcsCcdbInfo.h"
+
 #include "Framework/ConfigParamRegistry.h"
 #include "Framework/Task.h"
 #include "Framework/WorkflowSpec.h"
@@ -39,68 +42,33 @@ namespace fit
 class FITDCSConfigProcessor : public o2::framework::Task
 {
  public:
-  FITDCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
+  FITDCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM, const o2::header::DataDescription& dataDescriptionFeeConfig, const o2::header::DataDescription& dataDescriptionHvConfig)
     : mDetectorName(detectorName),
-      mDataDescriptionDChM(dataDescriptionDChM) {} // TODO AM: how to pass dd
+      mDataDescriptionDChM(dataDescriptionDChM),
+      mDataDescriptionFeeConfig(dataDescriptionFeeConfig),
+      mDataDescriptionHvConfig(dataDescriptionHvConfig) {} // TODO AM: how to pass dd
 
  protected:
   /// Initializes the DCS config reader.
   /// Can be overriden in case another reader (subclass of o2::fit::FITDeadChannelMapReader) is needed.
-  virtual void initDeadChannelMapReader()
-  {
-    mDeadChannelMapReader = std::make_unique<FITDeadChannelMapReader>(FITDeadChannelMapReader());
-  }
+  virtual void initDeadChannelMapReader();
 
-  long getValidityTime(o2::framework::ProcessingContext& pc)
-  {
-    long dataTime = (long)(pc.services().get<o2::framework::TimingInfo>().creation);
-    if (dataTime == 0xffffffffffffffff) {                                                                                                     // means it is not set
-      dataTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count(); // in ms
-    }
-    return dataTime;
-  }
+  long getValidityTime(o2::framework::ProcessingContext& pc);
 
-  void setupDeadChannelMapReader(o2::framework::InitContext& ic)
-  {
-    mDeadChannelMapReader->setFileNameDChM(ic.options().get<std::string>("filename-dchm"));
-    mDeadChannelMapReader->setValidDaysDChM(ic.options().get<uint>("valid-days-dchm"));
-    mDeadChannelMapReader->setCcdbPathDChM(mDetectorName + "/Calib/DeadChannelMap");
-    bool verbose = ic.options().get<bool>("use-verbose-mode");
-    mDeadChannelMapReader->setVerboseMode(verbose);
-    bool validateUpload = !ic.options().get<bool>("no-validate");
-    mDeadChannelMapReader->setValidateUploadMode(validateUpload);
-
-    LOG(info) << "Verbose mode: " << verbose;
-    LOG(info) << "Validate upload: " << validateUpload;
-    LOG(info) << "Expected dead channel map file name: " << mDeadChannelMapReader->getFileNameDChM();
-    LOG(info) << "Dead channel maps will be valid for " << mDeadChannelMapReader->getValidDaysDChM() << " days";
-  }
+  void setupDeadChannelMapReader(o2::framework::InitContext& ic);
 
   template <typename ConfigurationReaderType>
   void setupFeeConfigurationReader(o2::framework::InitContext& ic, FITFEEConfigurationReader<ConfigurationReaderType>& feeConfig)
   {
     feeConfig.setFilename(ic.options().get<std::string>("filename-fee-config"));
-    feeConfig.setCcdbPath(mDetectorName + "/Config/FeeConfiguration");
-    feeConfig.setValidityPeriodInDays(ic.options().get<uint32_t>("valid-days-fee-config"));
+    mFeeConfigCcdbInfo.setCcdbPath(mDetectorName + "/Config/FeeConfiguration");
+    mFeeConfigCcdbInfo.setValidityPeriodInDays(ic.options().get<uint32_t>("valid-days-fee-config"));
   }
 
-  void handleDeadChannelMapUpdate(o2::framework::ProcessingContext& pc, long dataTime, gsl::span<const char> dataBuffer)
-  {
-    processDeadChannelMap(dataTime, dataBuffer);
-    sendObject(pc.outputs(), mDeadChannelMapReader->getDChM(), mDeadChannelMapReader->getObjectInfoDChM(), mDataDescriptionDChM);
-    mDeadChannelMapReader->resetStartValidityDChM();
-    mDeadChannelMapReader->resetDChM();
-  }
+  void setupHvConfigurationReader(o2::framework::InitContext& ic, FITHvConfigurationReader& hvReader);
 
-  /// Processing the dead channel map
-  void processDeadChannelMap(const long& dataTime, gsl::span<const char> dataBuffer)
-  {
-    if (!mDeadChannelMapReader->isStartValidityDChMSet()) {
-      mDeadChannelMapReader->setStartValidityDChM(dataTime);
-    }
-    mDeadChannelMapReader->processDChM(dataBuffer);
-    mDeadChannelMapReader->updateDChMCcdbObjectInfo();
-  }
+  void handleDeadChannelMapUpdate(o2::framework::ProcessingContext& pc, long dataTime, gsl::span<const char> dataBuffer);
+  void processDeadChannelMap(const long& dataTime, gsl::span<const char> dataBuffer);
 
   template <typename ConfigObjectType>
   void sendObject(o2::framework::DataAllocator& output, const ConfigObjectType& object, o2::ccdb::CcdbObjectInfo& info, const o2::header::DataDescription& descriptor)
@@ -114,9 +82,30 @@ class FITDCSConfigProcessor : public o2::framework::Task
 
   std::unique_ptr<FITDeadChannelMapReader> mDeadChannelMapReader;
 
+  const o2::header::DataDescription& getFeeConfigDescription() const
+  {
+    return mDataDescriptionFeeConfig;
+  }
+
+  const o2::header::DataDescription& getHvConfigDescription() const
+  {
+    return mDataDescriptionHvConfig;
+  }
+
+  const o2::header::DataDescription& getDeadChannelMapDescription() const
+  {
+    return mDataDescriptionDChM;
+  }
+
+ protected:
+  DcsCcdbInfo mFeeConfigCcdbInfo{180u};
+  DcsCcdbInfo mHvConfigCcdbInfo{180u};
+
  private:
   std::string mDetectorName;                        ///< Detector name
   o2::header::DataDescription mDataDescriptionDChM; ///< DataDescription for the dead channel map
+  o2::header::DataDescription mDataDescriptionFeeConfig;
+  o2::header::DataDescription mDataDescriptionHvConfig;
 };
 
 } // namespace fit

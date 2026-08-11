@@ -9,11 +9,6 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file FITDCSConfigurationDataParser.h
-/// \brief DCS configuration reader for FIT
-///
-/// \author Andreas Molander <andreas.molander@cern.ch>, University of Jyvaskyla, Finland
-
 #ifndef O2_FIT_DCS_CONFIGURATION_DATA_READER_H
 #define O2_FIT_DCS_CONFIGURATION_DATA_READER_H
 
@@ -31,49 +26,15 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
  public:
   FITFEEConfigurationReader()
   {
-    rapidjson::Document schemaDocument;
-    schemaDocument.Parse(configurationSchema.c_str());
-    if (schemaDocument.HasParseError()) {
-      throw std::runtime_error("Cannot parse FIT FEE JSON schema");
-    }
-    mSchema = std::make_unique<rapidjson::SchemaDocument>(schemaDocument);
-  }
-
-  template <typename FeeConfigType>
-  o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, const std::map<std::string, std::string>& metadata)
-  {
-    return FITDCSBaseConfigReader::createObjectInfo(configObject, startValidityTimestamp, getValidityTimestamp(startValidityTimestamp), metadata);
-  }
-
-  long getValidityTimestamp(long startTimestamp)
-  {
-    return startTimestamp + mValidDays * o2::ccdb::CcdbObjectInfo::DAY;
-  }
-
-  void setValidityPeriodInDays(long days)
-  {
-    mValidDays = days;
-  }
-
-  long getValidityPeriodInDays()
-  {
-    return mValidDays;
+    loadSchema(configurationSchema);
   }
 
  protected:
   template <typename ConfigType>
   ConfigType parseFeeConfiguration(gsl::span<const char> buffer)
   {
+    rapidjson::Document document = parseJsonBuffer(buffer);
     ConfigType configuration;
-    rapidjson::MemoryStream ms(buffer.data(), buffer.size());
-    rapidjson::Document document;
-    document.ParseStream(ms);
-
-    std::string validationErrorMessage;
-    if (validateSchema(document, validationErrorMessage) == false) {
-      std::string_view bufferView(buffer.data(), buffer.size());
-      throw std::runtime_error("Received document does not match FEE configuration schema! Error message: " + validationErrorMessage);
-    }
 
     parseChannelData(document, "channels", configuration.channels);
     parseTcmConfig(document, "tcm", configuration.tcm);
@@ -83,6 +44,7 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 
     return configuration;
   }
+
   template <typename T, int Size>
   void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
   {
@@ -185,27 +147,6 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
     }
   }
 
-  bool validateSchema(const rapidjson::Document& docs, std::string& errorMessage)
-  {
-    rapidjson::SchemaValidator validator(*mSchema);
-    if (docs.Accept(validator) == false) {
-      rapidjson::StringBuffer buffer;
-      std::ostringstream ss;
-      validator.GetInvalidSchemaPointer().StringifyUriFragment(buffer);
-      ss << "Invalid schema: " << buffer.GetString() << '\n';
-      ss << "Invalid keyword: " << validator.GetInvalidSchemaKeyword() << '\n';
-
-      buffer.Clear();
-
-      validator.GetInvalidDocumentPointer().StringifyUriFragment(buffer);
-      ss << "Invalid document: " << buffer.GetString() << '\n';
-
-      errorMessage = ss.str();
-      return false;
-    }
-    return true;
-  }
-
   const std::string& getSchemaString() const
   {
     return configurationSchema;
@@ -213,8 +154,6 @@ class FITFEEConfigurationReader : public FITDCSBaseConfigReader
 
  private:
   static const std::string configurationSchema;
-  std::unique_ptr<rapidjson::SchemaDocument> mSchema;
-  long mValidDays{180u};
 };
 
 template <class ConfigurationReaderType>

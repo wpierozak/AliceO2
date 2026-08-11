@@ -60,4 +60,6 @@
 #pragma link C++ struct o2::ft0::Ft0FeeConfiguration + ;
 #pragma link C++ struct o2::ft0::TriggersConfig + ;
 #pragma link C++ struct o2::fit::ChannelsConfig < 212> + ;
+#pragma link C++ struct o2::ft0::Ft0HvConfiguration + ;
+#pragma link C++ struct o2::fit::HvChannelsConfig < 212> + ;
 #endif

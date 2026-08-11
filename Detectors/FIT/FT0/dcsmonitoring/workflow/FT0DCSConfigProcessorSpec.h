@@ -34,16 +34,20 @@ DataProcessorSpec getFT0DCSConfigProcessorSpec()
   outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, ddDChM}, Lifetime::Sporadic);
   outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, ddDChM}, Lifetime::Sporadic);
 
-  o2::header::DataDescription feeConifg = "FT0_FEE_CONFIG";
-  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, feeConifg}, Lifetime::Sporadic);
-  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, feeConifg}, Lifetime::Sporadic);
+  o2::header::DataDescription ddFeeConfig = "FT0_FEE_CONFIG";
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, ddFeeConfig}, Lifetime::Sporadic);
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, ddFeeConfig}, Lifetime::Sporadic);
+
+  o2::header::DataDescription ddHvConfig = "FT0_HV_CONFIG";
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, ddHvConfig}, Lifetime::Sporadic);
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, ddHvConfig}, Lifetime::Sporadic);
 
   return DataProcessorSpec{
     "ft0-dcs-config-processor",
     Inputs{{"inputConfig", o2::header::gDataOriginFT0, "DCS_CONFIG_FILE", Lifetime::Sporadic},
            {"inputConfigFileName", o2::header::gDataOriginFT0, "DCS_CONFIG_NAME", Lifetime::Sporadic}},
     outputs,
-    AlgorithmSpec{adaptFromTask<o2::ft0::FT0DCSConfigProcessor>("FT0", ddDChM)},
+    AlgorithmSpec{adaptFromTask<o2::ft0::FT0DCSConfigProcessor>("FT0", ddDChM, ddFeeConfig, ddHvConfig)},
     Options{{"use-verbose-mode", VariantType::Bool, false, {"Use verbose mode"}},
             {"filename-dchm", VariantType::String, "FT0-deadchannels.txt", {"Dead channel map file name"}},
             {"valid-days-dchm", VariantType::UInt32, 180u, {"Dead channel map validity in days"}},

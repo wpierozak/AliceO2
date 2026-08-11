@@ -12,6 +12,9 @@
 #ifndef O2_FIT_DCS_BASE_CONFIG_READER_H
 #define O2_FIT_DCS_BASE_CONFIG_READER_H
 
+#include <rapidjson/document.h>
+#include <rapidjson/schema.h>
+#include <gsl/span>
 #include "DetectorsCalibration/Utils.h"
 
 namespace o2::fit
@@ -19,28 +22,53 @@ namespace o2::fit
 class FITDCSBaseConfigReader
 {
  public:
-  template <typename FeeConfigType>
-  o2::ccdb::CcdbObjectInfo createObjectInfo(const FeeConfigType& configObject, long startValidityTimestamp, long endValidityTimestamp, const std::map<std::string, std::string>& metadata)
+  template <typename T, int Size>
+  void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
   {
-    o2::ccdb::CcdbObjectInfo objectInfo;
-    o2::calibration::Utils::prepareCCDBobjectInfo(configObject, objectInfo, mCcdbPath, metadata, startValidityTimestamp, endValidityTimestamp);
-    objectInfo.setValidateUpload(mValidateUpload);
-    return objectInfo;
-  }
-
-  void setCcdbPath(const std::string& path)
-  {
-    mCcdbPath = path;
-  }
-  const std::string& getCcdbPath() const
-  {
-    return mCcdbPath;
+    if (node.HasMember(childName) == false) {
+      throw std::runtime_error(std::string("Failed to find node of name ") + childName);
+    }
+    const auto& childNode = node[childName];
+    if (childNode.IsArray() == false) {
+      throw std::runtime_error(std::format("Node {} is not an array!", childName));
+    }
+    auto jsonArray = childNode.GetArray();
+    if (jsonArray.Size() != Size) {
+      throw std::runtime_error(std::format("Array {}. Expected array of size {}, parsed array of size {}", childName, Size, jsonArray.Size()));
+    }
+    for (int idx = 0; idx < Size; idx++) {
+      const auto& node = jsonArray[idx];
+      if constexpr (std::is_same_v<T, bool>) {
+        if (!node.IsBool()) {
+          throw std::runtime_error(std::format("{} is not a bool array", childName));
+        }
+        array[idx] = node.GetBool();
+      } else if constexpr (std::is_floating_point_v<T>) {
+        if (!node.IsNumber()) {
+          throw std::runtime_error(std::format("{} is not an floating point array", childName));
+        }
+        array[idx] = node.GetFloat();
+      } else if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+        if (!node.IsUint()) {
+          throw std::runtime_error(std::format("{} is not an unsigned integer array", childName));
+        }
+        array[idx] = static_cast<T>(node.GetUint());
+      } else if constexpr (std::is_integral_v<T>) {
+        if (!node.IsInt()) {
+          throw std::runtime_error(std::format("{} is not an integer array", childName));
+        }
+        array[idx] = static_cast<T>(node.GetInt());
+      } else {
+        static_assert(std::is_same_v<T, void>, "Unsupported type");
+      }
+    }
   }
 
   void setFilename(const std::string& filename)
   {
     mFilename = filename;
   }
+
   const std::string& getFilename() const
   {
     return mFilename;
@@ -51,29 +79,15 @@ class FITDCSBaseConfigReader
     return mFilename == filename;
   }
 
-  void setValidateUpload(bool validate)
-  {
-    mValidateUpload = validate;
-  }
-  bool getValidateUpload() const
-  {
-    return mValidateUpload;
-  }
+  bool validateSchema(const rapidjson::Document& docs, std::string& errorMessage);
 
-  void setDataDescriptor(o2::header::DataDescription descriptor)
-  {
-    mDataDescriptor = descriptor;
-  }
-  const o2::header::DataDescription& getDataDescriptor() const
-  {
-    return mDataDescriptor;
-  }
+ protected:
+  void loadSchema(const std::string& schema);
+  rapidjson::Document parseJsonBuffer(gsl::span<const char> buffer, bool throwOnInvalidSchema = true);
 
  private:
-  std::string mCcdbPath;
-  o2::header::DataDescription mDataDescriptor;
   std::string mFilename;
-  bool mValidateUpload;
+  std::unique_ptr<rapidjson::SchemaDocument> mSchema;
 };
 } // namespace o2::fit
 #endif

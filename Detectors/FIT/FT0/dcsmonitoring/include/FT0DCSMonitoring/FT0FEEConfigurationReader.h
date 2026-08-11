@@ -25,10 +25,6 @@ namespace o2::ft0
 class FT0FEEConfigurationReader : public o2::fit::FITFEEConfigurationReader<FT0FEEConfigurationReader>
 {
  public:
-  FT0FEEConfigurationReader()
-  {
-    setDataDescriptor("FT0_FEE_CONFIG");
-  }
   Ft0FeeConfiguration parseFeeConfiguration(gsl::span<const char> configBuf);
   void parseTriggers(const rapidjson::Value& root, const char* triggersNodeName, TriggersConfig& config);
 };
