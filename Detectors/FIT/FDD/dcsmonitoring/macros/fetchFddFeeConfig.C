@@ -12,7 +12,7 @@
 #if !defined(__CLING__) || defined(__ROOTCLING__)
 
 #include "CCDB/CcdbApi.h"
-#include "DataFormatsFT0/FeeConfiguration.h"
+#include "DataFormatsFDD/FeeConfiguration.h"
 
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
@@ -27,16 +27,16 @@
 
 #endif
 
-void fetchFt0FeeConfig(const std::string ccdbUrl = "http://alice-ccdb.cern.ch", long timestamp = -1, const std::string fileName = "ft0-fee-config.json", const std::string ccdbPath = "FT0/Config/FeeConfiguration")
+void fetchFddFeeConfig(const std::string ccdbUrl = "http://alice-ccdb.cern.ch", long timestamp = -1, const std::string fileName = "fdd-fee-config.json", const std::string ccdbPath = "FDD/Config/FeeConfiguration")
 {
   o2::ccdb::CcdbApi ccdbApi;
   ccdbApi.init(ccdbUrl);
 
   std::map<std::string, std::string> metadata;
-  std::unique_ptr<o2::ft0::Ft0FeeConfiguration> config(ccdbApi.retrieveFromTFileAny<o2::ft0::Ft0FeeConfiguration>(ccdbPath, metadata, timestamp));
+  std::unique_ptr<o2::fdd::FddFeeConfiguration> config(ccdbApi.retrieveFromTFileAny<o2::fdd::FddFeeConfiguration>(ccdbPath, metadata, timestamp));
 
   if (!config) {
-    throw std::runtime_error("Cannot retrieve Ft0FeeConfiguration from CCDB path " + ccdbPath);
+    throw std::runtime_error("Cannot retrieve FddFeeConfiguration from CCDB path " + ccdbPath);
   }
 
   rapidjson::Document doc;
@@ -49,15 +49,19 @@ void fetchFt0FeeConfig(const std::string ccdbUrl = "http://alice-ccdb.cern.ch", 
   rapidjson::Value cfdZeros(rapidjson::kArrayType);
   rapidjson::Value adcZeros(rapidjson::kArrayType);
   rapidjson::Value adcDelays(rapidjson::kArrayType);
+  rapidjson::Value rangeCorrectionAdc0(rapidjson::kArrayType);
+  rapidjson::Value rangeCorrectionAdc1(rapidjson::kArrayType);
   rapidjson::Value channelMaskData(rapidjson::kArrayType);
   rapidjson::Value channelMaskTriggers(rapidjson::kArrayType);
 
-  for (int i = 0; i < o2::ft0::Ft0FeeConfiguration::NChannels; ++i) {
+  for (int i = 0; i < o2::fdd::FddFeeConfiguration::NChannels; ++i) {
     timeAligments.PushBack(config->channels.timeAligments[i], allocator);
     cfdThresholds.PushBack(config->channels.cfdThresholds[i], allocator);
     cfdZeros.PushBack(config->channels.cfdZeros[i], allocator);
     adcZeros.PushBack(config->channels.adcZeros[i], allocator);
     adcDelays.PushBack(config->channels.adcDelays[i], allocator);
+    rangeCorrectionAdc0.PushBack(config->channels.rangeCorrectionAdc0[i], allocator);
+    rangeCorrectionAdc1.PushBack(config->channels.rangeCorrectionAdc1[i], allocator);
     channelMaskData.PushBack(config->channels.channelMaskData[i], allocator);
     channelMaskTriggers.PushBack(config->channels.channelMaskTriggers[i], allocator);
   }
@@ -67,6 +71,8 @@ void fetchFt0FeeConfig(const std::string ccdbUrl = "http://alice-ccdb.cern.ch", 
   channels.AddMember("cfd_zeros", cfdZeros, allocator);
   channels.AddMember("adc_zeros", adcZeros, allocator);
   channels.AddMember("adc_delays", adcDelays, allocator);
+  channels.AddMember("range_correction_adc0", rangeCorrectionAdc0, allocator);
+  channels.AddMember("range_correction_adc1", rangeCorrectionAdc1, allocator);
   channels.AddMember("channel_mask_data", channelMaskData, allocator);
   channels.AddMember("channel_mask_triggers", channelMaskTriggers, allocator);
   doc.AddMember("channels", channels, allocator);
@@ -80,8 +86,9 @@ void fetchFt0FeeConfig(const std::string ccdbUrl = "http://alice-ccdb.cern.ch", 
 
   for (int i = 0; i < 10; ++i) {
     rapidjson::Value pm(rapidjson::kObjectType);
-
     pm.AddMember("or_gate", config->pmA[i].orGate, allocator);
+    pm.AddMember("trg_charge_low_level", config->pmA[i].trgChargeLowLevel, allocator);
+    pm.AddMember("trg_charge_high_level", config->pmA[i].trgChargeHighLevel, allocator);
     pmA.PushBack(pm, allocator);
   }
   doc.AddMember("pm_a", pmA, allocator);
@@ -90,6 +97,8 @@ void fetchFt0FeeConfig(const std::string ccdbUrl = "http://alice-ccdb.cern.ch", 
   for (int i = 0; i < 10; ++i) {
     rapidjson::Value pm(rapidjson::kObjectType);
     pm.AddMember("or_gate", config->pmC[i].orGate, allocator);
+    pm.AddMember("trg_charge_low_level", config->pmC[i].trgChargeLowLevel, allocator);
+    pm.AddMember("trg_charge_high_level", config->pmC[i].trgChargeHighLevel, allocator);
     pmC.PushBack(pm, allocator);
   }
   doc.AddMember("pm_c", pmC, allocator);
