@@ -14,24 +14,28 @@ void FV0DCSConfigProcessor::init(o2::framework::InitContext& ic)
 
 void FV0DCSConfigProcessor::run(o2::framework::ProcessingContext& pc)
 {
-  long dataTime = getValidityTime(pc);
+  try {
+    long dataTime = getValidityTime(pc);
 
-  gsl::span<const char> dataBuffer = pc.inputs().get<gsl::span<char>>("inputConfig");
-  std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
-  LOG(info) << "Got input file " << configFileName << " of size " << dataBuffer.size();
+    gsl::span<const char> dataBuffer = pc.inputs().get<gsl::span<char>>("inputConfig");
+    std::string configFileName = pc.inputs().get<std::string>("inputConfigFileName");
+    LOG(info) << "Got input file " << configFileName << " of size " << dataBuffer.size();
 
-  if (!configFileName.compare(mDeadChannelMapReader->getFileNameDChM())) {
-    handleDeadChannelMapUpdate(pc, dataTime, dataBuffer);
-  } else if (mFeeConfigurationReader.matchFilename(configFileName)) {
-    Fv0FeeConfiguration feeConfiguration = mFeeConfigurationReader.parseFeeConfiguration(dataBuffer);
-    o2::ccdb::CcdbObjectInfo objectInfo = mFeeConfigCcdbInfo.createObjectInfo(feeConfiguration, dataTime, {});
-    sendObject(pc.outputs(), feeConfiguration, objectInfo, getFeeConfigDescription());
-  } else if (mHvConfigurationReader.matchFilename(configFileName)) {
-    Fv0HvConfiguration hvConfig = mHvConfigurationReader.parseHvConfiguration<Fv0HvConfiguration>(dataBuffer);
-    o2::ccdb::CcdbObjectInfo objectInfo = mHvConfigCcdbInfo.createObjectInfo(hvConfig, dataTime, {});
-    sendObject(pc.outputs(), hvConfig, objectInfo, getHvConfigDescription());
-  } else {
-    LOG(error) << "Unknown input file: " << configFileName;
+    if (!configFileName.compare(mDeadChannelMapReader->getFileNameDChM())) {
+      handleDeadChannelMapUpdate(pc, dataTime, dataBuffer);
+    } else if (mFeeConfigurationReader.matchFilename(configFileName)) {
+      Fv0FeeConfiguration feeConfiguration = mFeeConfigurationReader.parseFeeConfiguration(dataBuffer);
+      o2::ccdb::CcdbObjectInfo objectInfo = mFeeConfigCcdbInfo.createObjectInfo(feeConfiguration, dataTime, {});
+      sendObject(pc.outputs(), feeConfiguration, objectInfo, getFeeConfigDescription());
+    } else if (mHvConfigurationReader.matchFilename(configFileName)) {
+      Fv0HvConfiguration hvConfig = mHvConfigurationReader.parseHvConfiguration<Fv0HvConfiguration>(dataBuffer);
+      o2::ccdb::CcdbObjectInfo objectInfo = mHvConfigCcdbInfo.createObjectInfo(hvConfig, dataTime, {});
+      sendObject(pc.outputs(), hvConfig, objectInfo, getHvConfigDescription());
+    } else {
+      LOG(error) << "Unknown input file: " << configFileName;
+    }
+  } catch (std::exception& e) {
+    LOG(error) << "Exception: " << e.what();
   }
 }
 
