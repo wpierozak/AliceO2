@@ -52,11 +52,13 @@ rapidjson::Document createDocumentFromString(const char* data)
   return doc;
 }
 
-rapidjson::Document createPmConfigNode(uint8_t orGateValue)
+rapidjson::Document createPmConfigNode(uint8_t orGateValue, uint16_t trgChargeLowLevel, uint16_t trgChargeHighLevel)
 {
   auto doc = createEmptyPayload();
   auto& allocator = doc.GetAllocator();
   doc.AddMember("or_gate", orGateValue, allocator);
+  doc.AddMember("trg_charge_low_level", trgChargeLowLevel, allocator);
+  doc.AddMember("trg_charge_high_level", trgChargeHighLevel, allocator);
   return doc;
 }
 
@@ -75,7 +77,7 @@ void addTcmConfigNode(rapidjson::Document& doc,
 }
 
 template <size_t NChannels>
-void addPmConfigsNode(rapidjson::Document& doc, const char* nodeName, const uint8_t (&orGateValues)[NChannels])
+void addPmConfigsNode(rapidjson::Document& doc, const char* nodeName, const uint8_t (&orGateValues)[NChannels], const uint16_t (&trgChargeLowLevel)[NChannels], const uint16_t (&trgChargeHighLevel)[NChannels])
 {
   auto& allocator = doc.GetAllocator();
 
@@ -84,6 +86,8 @@ void addPmConfigsNode(rapidjson::Document& doc, const char* nodeName, const uint
   for (size_t idx = 0; idx < NChannels; ++idx) {
     rapidjson::Value pm(rapidjson::kObjectType);
     pm.AddMember("or_gate", orGateValues[idx], allocator);
+    pm.AddMember("trg_charge_low_level", trgChargeLowLevel[idx], allocator);
+    pm.AddMember("trg_charge_high_level", trgChargeHighLevel[idx], allocator);
     pmJson.PushBack(pm, allocator);
   }
 
@@ -105,11 +109,13 @@ void addArrayMember(rapidjson::Value& node, const char* memberName, const T (&va
 template <size_t NChannels>
 void addChannelsConfigNode(rapidjson::Document& doc,
                            const char* nodeName,
-                           const float (&timeAligments)[NChannels],
+                           const int16_t (&timeAligments)[NChannels],
                            const uint16_t (&cfdThresholds)[NChannels],
                            const int16_t (&cfdZeros)[NChannels],
                            const int16_t (&adcZeros)[NChannels],
                            const uint16_t (&adcDelays)[NChannels],
+                           const uint16_t (&rangeCorrectionAdc0)[NChannels],
+                           const uint16_t (&rangeCorrectionAdc1)[NChannels],
                            const bool (&channelMaskData)[NChannels],
                            const bool (&channelMaskTriggers)[NChannels])
 {
@@ -117,11 +123,13 @@ void addChannelsConfigNode(rapidjson::Document& doc,
 
   rapidjson::Value channelsJson(rapidjson::kObjectType);
 
-  addArrayMember(channelsJson, "time_aligments", timeAligments, allocator);
+  addArrayMember(channelsJson, "time_alignments", timeAligments, allocator);
   addArrayMember(channelsJson, "cfd_thresholds", cfdThresholds, allocator);
   addArrayMember(channelsJson, "cfd_zeros", cfdZeros, allocator);
   addArrayMember(channelsJson, "adc_zeros", adcZeros, allocator);
   addArrayMember(channelsJson, "adc_delays", adcDelays, allocator);
+  addArrayMember(channelsJson, "range_correction_adc0", rangeCorrectionAdc0, allocator);
+  addArrayMember(channelsJson, "range_correction_adc1", rangeCorrectionAdc1, allocator);
   addArrayMember(channelsJson, "channel_mask_data", channelMaskData, allocator);
   addArrayMember(channelsJson, "channel_mask_triggers", channelMaskTriggers, allocator);
 
@@ -153,8 +161,10 @@ class SimpleFITFEEConfigurationReader
 BOOST_AUTO_TEST_CASE(shouldParseSinglePmConfig)
 {
   const uint8_t orGateValue = 20;
+  const uint16_t rangeCorrectionAdc0 = 1024;
+  const uint16_t rangeCorrectionAdc1 = 2048;
 
-  rapidjson::Document doc = createPmConfigNode(orGateValue);
+  rapidjson::Document doc = createPmConfigNode(orGateValue, rangeCorrectionAdc0, rangeCorrectionAdc1);
 
   PmConfig pmConfig;
   SimpleFITFEEConfigurationReader reader;
@@ -186,11 +196,15 @@ BOOST_AUTO_TEST_CASE(shouldParseTcmConfig)
 BOOST_AUTO_TEST_CASE(shouldParseArrayOfPmConfigs)
 {
   const uint8_t pmAOrGate[] = {3, 4};
+  const uint16_t pmATrgChargeLowLevel[] = {2047, 2048};
+  const uint16_t pmATrgChargeHighLevel[] = {1047, 1048};
   const uint8_t pmCOrGate[] = {5, 6};
+  const uint16_t pmCTrgChargeLowLevel[] = {2045, 2046};
+  const uint16_t pmCTrgChargeHighLevel[] = {1045, 1046};
 
   rapidjson::Document doc = createEmptyPayload();
-  addPmConfigsNode(doc, "pm_a", pmAOrGate);
-  addPmConfigsNode(doc, "pm_c", pmCOrGate);
+  addPmConfigsNode(doc, "pm_a", pmAOrGate, pmATrgChargeLowLevel, pmATrgChargeHighLevel);
+  addPmConfigsNode(doc, "pm_c", pmCOrGate, pmCTrgChargeLowLevel, pmCTrgChargeHighLevel);
 
   PmConfig pmAParsed[2];
   PmConfig pmCParsed[2];
@@ -211,9 +225,11 @@ BOOST_AUTO_TEST_CASE(shouldParseArrayOfPmConfigs)
 BOOST_AUTO_TEST_CASE(shouldThrowOnInconsistentPmsArraySize)
 {
   const uint8_t pmAOrGate[] = {0, 0};
+  const uint16_t pmATrgChargeLowLevel[] = {2047, 2048};
+  const uint16_t pmATrgChargeHighLevel[] = {1047, 1048};
 
   rapidjson::Document doc = createEmptyPayload();
-  addPmConfigsNode(doc, "pm_a", pmAOrGate);
+  addPmConfigsNode(doc, "pm_a", pmAOrGate, pmATrgChargeLowLevel, pmATrgChargeHighLevel);
 
   PmConfig pmAParsed[3];
 
@@ -226,11 +242,13 @@ BOOST_AUTO_TEST_CASE(shouldParseChannelsConfig)
 {
   constexpr size_t NTestChannels = 4;
 
-  const float timeAligments[NTestChannels] = {1.1f, 2.2f, 3.3f, 4.4f};
+  const int16_t timeAligments[NTestChannels] = {1, 2, 3, 4};
   const uint16_t cfdThresholds[NTestChannels] = {10, 20, 30, 40};
   const int16_t cfdZeros[NTestChannels] = {-1, -2, -3, -4};
   const int16_t adcZeros[NTestChannels] = {100, 200, 300, 400};
   const uint16_t adcDelays[NTestChannels] = {5, 6, 7, 8};
+  const uint16_t rangeCorrectionAdc0[NTestChannels] = {2045, 2046, 2047, 2048};
+  const uint16_t rangeCorrectionAdc1[NTestChannels] = {2048, 2022, 2021, 2022};
   const bool channelMaskData[NTestChannels] = {true, false, true, false};
   const bool channelMaskTriggers[NTestChannels] = {false, true, false, true};
 
@@ -244,6 +262,8 @@ BOOST_AUTO_TEST_CASE(shouldParseChannelsConfig)
     cfdZeros,
     adcZeros,
     adcDelays,
+    rangeCorrectionAdc0,
+    rangeCorrectionAdc1,
     channelMaskData,
     channelMaskTriggers);
 
@@ -268,21 +288,39 @@ BOOST_AUTO_TEST_CASE(shouldAcceptValidFeeConfigurationPayload)
   const char* jsonPayload = R"json(
   {
     "channels": {
-      "time_aligments": [1, 2, 3, 4],
+      "time_alignments": [1, 2, 3, 4],
       "cfd_thresholds": [10, 20, 30, 40],
       "cfd_zeros": [11, 22, 33, 44],
       "adc_zeros": [21, 22, 23, 24],
       "adc_delays": [31, 32, 33, 34],
+      "range_correction_adc0": [2048, 2048, 1025, 1024],
+      "range_correction_adc1": [2048, 2047, 2046, 2045],
       "channel_mask_data": [true, false, true, false],
       "channel_mask_triggers": [true, true, false, false]
     },
     "pm_a": [
-      {"or_gate": 1.21},
-      {"or_gate": 1.22}
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
+      {
+        "or_gate": 1.22,
+        "trg_charge_low_level": 4,
+        "trg_charge_high_level": 7
+      }
     ],
     "pm_c": [
-      {"or_gate": 0.1},
-      {"or_gate": 0.2}
+       {
+        "or_gate": 1.22,
+        "trg_charge_low_level": 4,
+        "trg_charge_high_level": 7
+      },
+       {
+        "or_gate": 1.22,
+        "trg_charge_low_level": 4,
+        "trg_charge_high_level": 7
+      }
     ],
     "tcm": {
       "phase_delay_a": 3.3,
@@ -307,23 +345,41 @@ BOOST_AUTO_TEST_CASE(shouldAcceptValidFeeConfigurationPayloadWithNullPmData)
   const char* jsonPayload = R"json(
   {
     "channels": {
-      "time_aligments": [1, 2, 3, 4],
+      "time_alignments": [1, 2, 3, 4],
       "cfd_thresholds": [10, 20, 30, 40],
       "cfd_zeros": [11, 22, 33, 44],
       "adc_zeros": [21, 22, 23, 24],
       "adc_delays": [31, 32, 33, 34],
+      "range_correction_adc0": [2048, 2048, 1025, 1024],
+      "range_correction_adc1": [2048, 2047, 2046, 2045],
       "channel_mask_data": [true, false, true, false],
       "channel_mask_triggers": [true, true, false, false]
     },
     "pm_a": [
-      {"or_gate": 1.21},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
-      {"or_gate": 1.22}
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      }
     ],
     "pm_c": [
       null,
-      {"or_gate": 0.1},
-      {"or_gate": 0.2},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
       null
     ],
@@ -353,23 +409,40 @@ BOOST_AUTO_TEST_CASE(shouldDetectInvalidPayload)
   const char* missingChannelData = R"json(
   {
     "channels": {
-      "time_aligments": [1, 2, 3, 4],
-      "cfd_thresholds": [10, 20, 40],
+      "time_alignments": [1, 2, 3, 4],
+      "cfd_thresholds": [10, 20, 40, 44],
       "cfd_zeros": [11, 22, 33, 44],
-      "adc_zeros": [21, 22, 23],
       "adc_delays": [31, 32, 33, 34],
+      "range_correction_adc0": [2048, 2048, 1025, 1024],
+      "range_correction_adc1": [2048, 2047, 2046, 2045],
       "channel_mask_data": [true, false, true, false],
       "channel_mask_triggers": [true, true, false, false]
     },
     "pm_a": [
-      {"or_gate": 1.21},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
-      {"or_gate": 1.22}
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      }
     ],
     "pm_c": [
       null,
-      {"or_gate": 0.1},
-      {"or_gate": 0.2},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
       null
     ],
@@ -389,21 +462,34 @@ BOOST_AUTO_TEST_CASE(shouldDetectInvalidPayload)
   const char* invalidPmConfig = R"json(
   {
     "channels": {
-      "time_aligments": [1, 2, 3, 5, 4],
+      "time_alignments": [1, 2, 3, 5, 4],
       "cfd_thresholds": [10, 20, 30, 40],
       "cfd_zeros": [11, 22, 33, 44],
       "adc_zeros": [21, 22, 23, 24],
-      "adc_delays": [31, 32, 33, 34],
+      "range_correction_adc0": [2048, 2048, 1025, 1024],
+      "range_correction_adc1": [2048, 2047, 2046, 2045],
       "channel_mask_data": [true, false, true, false],
       "channel_mask_triggers": [true, true, false, false]
     },
     "pm_a": [
-      {"or_gate": 1.21},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
-      {"o_gate": 1.22}
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      }
     ],
     "pm_c": [
-      {"gate": 0.2},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      }
     ],
     "tcm": {
       "phase_delay_a": 3.3,
@@ -415,34 +501,51 @@ BOOST_AUTO_TEST_CASE(shouldDetectInvalidPayload)
   }
   )json";
 
-  doc = createDocumentFromString(missingChannelData);
+  doc = createDocumentFromString(invalidPmConfig);
   BOOST_CHECK(reader.validateSchema(doc, errorMessage) == false);
 
   const char* invalidTcmConfig = R"json(
   {
     "channels": {
-      "time_aligments": [1, 2, 3, 4],
+      "time_alignments": [1, 2, 3, 4],
       "cfd_thresholds": [10, 20, 30, 40],
       "cfd_zeros": [11, 22, 33, 44],
       "adc_zeros": [21, 22, 23, 24],
       "adc_delays": [31, 32, 33, 34],
+      "range_correction_adc0": [2048, 2048, 1025, 1024],
+      "range_correction_adc1": [2048, 2047, 2046, 2045],
       "channel_mask_data": [true, false, true, false],
       "channel_mask_triggers": [true, true, false, false]
     },
     "pm_a": [
-      {"or_gate": 1.21},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
-      {"or_gate": 1.22}
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      }
     ],
     "pm_c": [
       null,
-      {"or_gate": 0.1},
-      {"or_gate": 0.2},
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
+      {
+        "or_gate": 1.21,
+        "trg_charge_low_level": 2,
+        "trg_charge_high_level": 5
+      },
       null,
       null
     ],
     "tcm": {
-      "phase_a": 3.3,
       "phase_delay_c": 4.4
     },
     "triggers": {
@@ -451,7 +554,7 @@ BOOST_AUTO_TEST_CASE(shouldDetectInvalidPayload)
   }
   )json";
 
-  doc = createDocumentFromString(missingChannelData);
+  doc = createDocumentFromString(invalidTcmConfig);
   BOOST_CHECK(reader.validateSchema(doc, errorMessage) == false);
 }
 

@@ -15,18 +15,24 @@
 #define O2_FDD_DCS_CONFIG_PROCESSOR_H
 
 #include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
+#include "FDDDCSMonitoring/FDDFEEConfigurationReader.h"
+#include "FITDCSMonitoring/FITHvConfigurationReader.h"
 
 namespace o2::fdd
 {
 class FDDDCSConfigProcessor : public o2::fit::FITDCSConfigProcessor
 {
  public:
-  FDDDCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM)
-    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM, {}, {}) {}
+  FDDDCSConfigProcessor(const std::string& detectorName, const o2::header::DataDescription& dataDescriptionDChM, const o2::header::DataDescription& dataDescriptionFeeConfig, const o2::header::DataDescription& dataDescriptionHvConfig)
+    : o2::fit::FITDCSConfigProcessor(detectorName, dataDescriptionDChM, dataDescriptionFeeConfig, dataDescriptionHvConfig) {}
 
   void init(o2::framework::InitContext& ic) final;
   void run(o2::framework::ProcessingContext& pc) final;
   void endOfStream(o2::framework::EndOfStreamContext& ec) final;
+
+ private:
+  FDDFEEConfigurationReader mFeeConfigurationReader;
+  o2::fit::FITHvConfigurationReader mHvConfigurationReader;
 };
 } // namespace o2::fdd
 #endif

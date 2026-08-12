@@ -22,70 +22,74 @@ using namespace o2::fit;
 
 BOOST_AUTO_TEST_SUITE(o2_fit_dcs_monitoring)
 
-rapidjson::Document createEmptyPayload() {
-    rapidjson::Document doc;
-    doc.SetObject();
-    return doc;
-}
-
-rapidjson::Document createDocumentFromString(const char* data) {
-    rapidjson::Document doc;
-    doc.Parse(data);
-    return doc;
-}
-
-template<size_t NChannels>
-void addToPayloadHvChannels(rapidjson::Document& doc, float (&gainValues)[NChannels]) {
-    auto& allocator = doc.GetAllocator();
-
-    rapidjson::Value gainJson(rapidjson::kArrayType);
-    for(int idx = 0; idx < NChannels; idx++) {
-        gainJson.PushBack(gainValues[idx], allocator);
-    }
-    rapidjson::Value hvChannelsJson(rapidjson::kObjectType);
-    hvChannelsJson.AddMember("gain", gainJson, allocator);
-    doc.AddMember("hv_channels", hvChannelsJson, allocator);
-}
-
-template<size_t NChannels>
-HvChannelsConfig<NChannels> createExpectedConfig(float (&gainValues)[NChannels]) {
-    HvChannelsConfig<NChannels> expectedConfig;
-    std::memcpy(std::begin(expectedConfig.gain), gainValues, sizeof(float) * NChannels);
-    return expectedConfig;
-}
-
-BOOST_AUTO_TEST_CASE(shouldParseHvChannels) 
+rapidjson::Document createEmptyPayload()
 {
-    constexpr size_t NChannels = 5;
-    float gainValues[NChannels] = {1.0, 2.1, 3.2, 4.3, 5.4};
+  rapidjson::Document doc;
+  doc.SetObject();
+  return doc;
+}
 
-    rapidjson::Document doc = createEmptyPayload();
-    addToPayloadHvChannels(doc, gainValues);
+rapidjson::Document createDocumentFromString(const char* data)
+{
+  rapidjson::Document doc;
+  doc.Parse(data);
+  return doc;
+}
 
-    HvChannelsConfig<NChannels> channelsConfig;
-    FITHvConfigurationReader reader;
-    reader.parseHvChannelData(doc, "hv_channels", channelsConfig);
+template <size_t NChannels>
+void addToPayloadHvChannels(rapidjson::Document& doc, float (&gainValues)[NChannels])
+{
+  auto& allocator = doc.GetAllocator();
 
-    HvChannelsConfig<NChannels> expectedConfig = createExpectedConfig(gainValues);
+  rapidjson::Value gainJson(rapidjson::kArrayType);
+  for (int idx = 0; idx < NChannels; idx++) {
+    gainJson.PushBack(gainValues[idx], allocator);
+  }
+  rapidjson::Value hvChannelsJson(rapidjson::kObjectType);
+  hvChannelsJson.AddMember("gain", gainJson, allocator);
+  doc.AddMember("hv_channels", hvChannelsJson, allocator);
+}
 
-    BOOST_CHECK(expectedConfig == channelsConfig);
+template <size_t NChannels>
+HvChannelsConfig<NChannels> createExpectedConfig(float (&gainValues)[NChannels])
+{
+  HvChannelsConfig<NChannels> expectedConfig;
+  std::memcpy(std::begin(expectedConfig.gain), gainValues, sizeof(float) * NChannels);
+  return expectedConfig;
+}
+
+BOOST_AUTO_TEST_CASE(shouldParseHvChannels)
+{
+  constexpr size_t NChannels = 5;
+  float gainValues[NChannels] = {1.0, 2.1, 3.2, 4.3, 5.4};
+
+  rapidjson::Document doc = createEmptyPayload();
+  addToPayloadHvChannels(doc, gainValues);
+
+  HvChannelsConfig<NChannels> channelsConfig;
+  FITHvConfigurationReader reader;
+  reader.parseHvChannelData(doc, "hv_channels", channelsConfig);
+
+  HvChannelsConfig<NChannels> expectedConfig = createExpectedConfig(gainValues);
+
+  BOOST_CHECK(expectedConfig == channelsConfig);
 }
 
 BOOST_AUTO_TEST_CASE(shouldAcceptValidJsonPayload)
 {
-    const char* jsonPayload = R"json(
+  const char* jsonPayload = R"json(
     {
         "hv_channels" : {
-            "gain": [1,2,3,4],
+            "gain": [1,2,3,4]
         }
     }
     )json";
 
-    rapidjson::Document doc = createDocumentFromString(jsonPayload);
+  rapidjson::Document doc = createDocumentFromString(jsonPayload);
 
-    FITHvConfigurationReader reader;
-    std::string errorMessage;
-    BOOST_CHECK_MESSAGE(reader.validateSchema(doc, errorMessage), errorMessage);
+  FITHvConfigurationReader reader;
+  std::string errorMessage;
+  BOOST_CHECK_MESSAGE(reader.validateSchema(doc, errorMessage), errorMessage);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

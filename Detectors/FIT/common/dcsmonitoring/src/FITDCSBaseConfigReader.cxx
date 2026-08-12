@@ -17,10 +17,10 @@ rapidjson::Document FITDCSBaseConfigReader::parseJsonBuffer(gsl::span<const char
   return document;
 }
 
-void FITDCSBaseConfigReader::loadSchema(const std::string& schema)
+void FITDCSBaseConfigReader::loadSchema(std::string_view schema)
 {
   rapidjson::Document schemaDocument;
-  schemaDocument.Parse(schema.c_str());
+  schemaDocument.Parse(schema.data(), schema.size());
   if (schemaDocument.HasParseError()) {
     throw std::runtime_error("Cannot parse JSON schema");
   }

@@ -70,13 +70,15 @@ struct PmConfig {
 
 template <int NChannels>
 struct ChannelsConfig {
-  float timeAligments[NChannels]{};
-  uint16_t cfdThresholds[NChannels]{};
-  int16_t cfdZeros[NChannels]{};
-  int16_t adcZeros[NChannels]{};
-  uint16_t adcDelays[NChannels]{};
-  bool channelMaskData[NChannels]{};
-  bool channelMaskTriggers[NChannels]{};
+  int16_t timeAligments[NChannels];
+  uint16_t cfdThresholds[NChannels];
+  int16_t cfdZeros[NChannels];
+  int16_t adcZeros[NChannels];
+  uint16_t adcDelays[NChannels];
+  uint16_t rangeCorrectionAdc0[NChannels];
+  uint16_t rangeCorrectionAdc1[NChannels];
+  bool channelMaskData[NChannels];
+  bool channelMaskTriggers[NChannels];
 
   constexpr ChannelsConfig()
   {
@@ -85,6 +87,8 @@ struct ChannelsConfig {
     config_helpers::fillDefaultArray(cfdZeros);
     config_helpers::fillDefaultArray(adcZeros);
     config_helpers::fillDefaultArray(adcDelays);
+    config_helpers::fillDefaultArray(rangeCorrectionAdc0);
+    config_helpers::fillDefaultArray(rangeCorrectionAdc1);
     config_helpers::fillDefaultArray(channelMaskData);
     config_helpers::fillDefaultArray(channelMaskTriggers);
   }
@@ -95,30 +99,27 @@ struct ChannelsConfig {
     return value == static_cast<T>(config_helpers::DefaultValue);
   }
 
-  gsl::span<const float, NChannels> getTimeAligments() const { return timeAligments; }
+  gsl::span<const int16_t, NChannels> getTimeAligments() const { return timeAligments; }
   gsl::span<const uint16_t, NChannels> getCfdThresholds() const { return cfdThresholds; }
   gsl::span<const int16_t, NChannels> getCfdZeros() const { return cfdZeros; }
   gsl::span<const int16_t, NChannels> getAdcZeros() const { return adcZeros; }
   gsl::span<const uint16_t, NChannels> getAdcDelays() const { return adcDelays; }
+  gsl::span<const uint16_t, NChannels> getRangeCorrectionAdc0() const { return rangeCorrectionAdc0; }
+  gsl::span<const uint16_t, NChannels> getRangeCorrectionAdc1() const { return rangeCorrectionAdc1; }
   gsl::span<const bool, NChannels> getChannelMaskTriggers() const { return channelMaskTriggers; }
   gsl::span<const bool, NChannels> getChannelMaskData() const { return channelMaskData; }
 
   bool operator==(const ChannelsConfig& other) const
   {
-    return std::equal(std::begin(timeAligments), std::end(timeAligments),
-                      std::begin(other.timeAligments)) &&
-           std::equal(std::begin(cfdThresholds), std::end(cfdThresholds),
-                      std::begin(other.cfdThresholds)) &&
-           std::equal(std::begin(cfdZeros), std::end(cfdZeros),
-                      std::begin(other.cfdZeros)) &&
-           std::equal(std::begin(adcZeros), std::end(adcZeros),
-                      std::begin(other.adcZeros)) &&
-           std::equal(std::begin(adcDelays), std::end(adcDelays),
-                      std::begin(other.adcDelays)) &&
-           std::equal(std::begin(channelMaskData), std::end(channelMaskData),
-                      std::begin(other.channelMaskData)) &&
-           std::equal(std::begin(channelMaskTriggers), std::end(channelMaskTriggers),
-                      std::begin(other.channelMaskTriggers));
+    return std::equal(std::begin(timeAligments), std::end(timeAligments), std::begin(other.timeAligments)) &&
+           std::equal(std::begin(cfdThresholds), std::end(cfdThresholds), std::begin(other.cfdThresholds)) &&
+           std::equal(std::begin(cfdZeros), std::end(cfdZeros), std::begin(other.cfdZeros)) &&
+           std::equal(std::begin(adcZeros), std::end(adcZeros), std::begin(other.adcZeros)) &&
+           std::equal(std::begin(adcDelays), std::end(adcDelays), std::begin(other.adcDelays)) &&
+           std::equal(std::begin(rangeCorrectionAdc0), std::end(rangeCorrectionAdc0), std::begin(other.rangeCorrectionAdc0)) &&
+           std::equal(std::begin(rangeCorrectionAdc1), std::end(rangeCorrectionAdc1), std::begin(other.rangeCorrectionAdc1)) &&
+           std::equal(std::begin(channelMaskData), std::end(channelMaskData), std::begin(other.channelMaskData)) &&
+           std::equal(std::begin(channelMaskTriggers), std::end(channelMaskTriggers), std::begin(other.channelMaskTriggers));
   }
 
   ClassDefNV(ChannelsConfig<NChannels>, 1);

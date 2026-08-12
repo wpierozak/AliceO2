@@ -44,34 +44,34 @@ class FITHvConfigurationReader : public FITDCSBaseConfigReader
     parseJsonArray(hvChannels, "gain", config.gain);
   }
 
-  const std::string& getSchemaString() const
+  std::string_view getSchemaString() const
   {
     return configurationSchema;
   }
 
  private:
-  static const std::string configurationSchema;
-};
-
-const std::string FITHvConfigurationReader::configurationSchema = R"json(
-{
+  inline static constexpr std::string_view configurationSchema = R"json(
+  {
     "type": "object",
     "properties": {
-        "hv_channels": {
+      "hv_channels": {
         "type": "object",
         "properties": {
-                "gain" : {
-                    "type": "array",
-                    "items": {"type": "number"}
-                }
+          "gain": {
+            "type": "array",
+            "items": {
+              "type": "number"
             }
+          }
         },
         "additionalProperties": false,
         "required": ["gain"]
+      }
     },
     "additionalProperties": false,
     "required": ["hv_channels"]
-}
-)json";
+  }
+  )json";
+};
 } // namespace o2::fit
 #endif

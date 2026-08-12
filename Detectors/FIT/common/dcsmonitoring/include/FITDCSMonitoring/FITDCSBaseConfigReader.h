@@ -22,6 +22,7 @@ namespace o2::fit
 class FITDCSBaseConfigReader
 {
  public:
+  virtual ~FITDCSBaseConfigReader() = default;
   template <typename T, int Size>
   void parseJsonArray(const rapidjson::Value& node, const char* childName, T (&array)[Size])
   {
@@ -82,7 +83,7 @@ class FITDCSBaseConfigReader
   bool validateSchema(const rapidjson::Document& docs, std::string& errorMessage);
 
  protected:
-  void loadSchema(const std::string& schema);
+  void loadSchema(std::string_view schema);
   rapidjson::Document parseJsonBuffer(gsl::span<const char> buffer, bool throwOnInvalidSchema = true);
 
  private:
