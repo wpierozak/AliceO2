@@ -14,7 +14,7 @@
 #ifndef O2_FDD_DCS_CONFIG_PROCESSOR_H
 #define O2_FDD_DCS_CONFIG_PROCESSOR_H
 
-#include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
+#include "FITDCSMonitoring/FITDCSConfigProcessor.h"
 #include "FDDDCSMonitoring/FDDFEEConfigurationReader.h"
 #include "FITDCSMonitoring/FITHvConfigurationReader.h"
 

@@ -1,7 +1,7 @@
 #ifndef O2_FT0_DCSCONFIGPROCESSOR_H
 #define O2_FT0_DCSCONFIGPROCESSOR_H
 
-#include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
+#include "FITDCSMonitoring/FITDCSConfigProcessor.h"
 #include "FT0DCSMonitoring/FT0FEEConfigurationReader.h"
 #include "FITDCSMonitoring/FITHvConfigurationReader.h"
 #include "DetectorsCalibration/Utils.h"

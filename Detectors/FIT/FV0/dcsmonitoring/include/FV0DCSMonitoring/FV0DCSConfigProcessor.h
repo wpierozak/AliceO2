@@ -13,7 +13,7 @@
 
 #ifndef O2_FV0_DCS_CONFIG_PROCESSOR_H
 #define O2_FV0_DCS_CONFIG_PROCESSOR_H
-#include "FITDCSMonitoring/FITDCSConfigProcessorSpec.h"
+#include "FITDCSMonitoring/FITDCSConfigProcessor.h"
 #include "FV0DCSMonitoring/FV0FEEConfigurationReader.h"
 #include "FITDCSMonitoring/FITHvConfigurationReader.h"
 
